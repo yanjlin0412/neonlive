@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>主畫面圖示選擇</title>
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#0c0c0f;color:#eef1f6;font-family:-apple-system,"PingFang TC",sans-serif;padding:max(env(safe-area-inset-top),24px) 16px 48px}
+main{max-width:980px;margin:0 auto}
+h1{margin:0;font-size:26px}
+.sub{color:#a3aab8;font-size:14px;line-height:1.6;margin:6px 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.card{background:#16171c;border:1px solid #26272e;border-radius:20px;padding:14px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
+.card.cur{border-color:#4a4f5c}
+.ic{width:120px;height:120px;border-radius:22.5%;background-size:cover;box-shadow:0 10px 26px rgba(0,0,0,.55)}
+.no{font:600 12px ui-monospace,Menlo,monospace;color:#7d8596}
+.nm{font-weight:700;font-size:16px}
+.ds{font-size:12px;color:#a3aab8;line-height:1.5}
+h2{font-size:18px;margin:34px 0 6px}
+.home{border-radius:28px;padding:22px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:18px 10px;background:radial-gradient(80% 60% at 20% 10%,#2b3d7a,transparent 70%),radial-gradient(70% 60% at 90% 90%,#7a2b6a,transparent 70%),#151826}
+.home.light{background:radial-gradient(80% 60% at 20% 10%,#c9d8ff,transparent 70%),radial-gradient(70% 60% at 90% 90%,#ffd1ec,transparent 70%),#eef0f6}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.home.light .app{color:#111;text-shadow:none}
+.app i{width:60px;height:60px;border-radius:22.5%;background-size:cover;box-shadow:0 4px 10px rgba(0,0,0,.35)}
+.tg{display:flex;gap:8px;margin-bottom:12px}
+.tg button{min-height:40px;padding:0 16px;border-radius:20px;border:1px solid #333;background:#1b1c22;color:#ddd;font:inherit;font-size:14px}
+.tg button[aria-pressed=true]{background:#eef1f6;color:#111}
+</style>
+</head>
+<body>
+<main>
+  <h1>主畫面圖示 · 10 款候選</h1>
+  <p class="sub">iPhone 會自動把圖示裁成圓角方形，下面已套用同樣的圓角。挑好後告訴我編號就行（例如「選 04」）。</p>
+  <div class="grid">
+    <div class="card cur"><div class="ic" style="background-image:url(../icons/icon-512.png)"></div><span class="no">目前</span><span class="nm">霓虹票根</span><span class="ds">城市夜景＋青色票框＋洋紅音量條</span></div>
+    <div class="card"><div class="ic" style="background-image:url(01-chrome-ticket-sm.png)"></div><span class="no">01</span><span class="nm">鉻金票根</span><span class="ds">鉻金屬實體票根，青色霓虹光暈，跟 App 票卡同款</span></div>
+    <div class="card"><div class="ic" style="background-image:url(02-iridescent-disc-sm.png)"></div><span class="no">02</span><span class="nm">虹彩光碟</span><span class="ds">寫實的彩虹反光 CD，對應詳情頁的光碟</span></div>
+    <div class="card"><div class="ic" style="background-image:url(03-lightsticks-sm.png)"></div><span class="no">03</span><span class="nm">交叉螢光棒</span><span class="ds">粉藍兩支應援棒加上閃光粒子</span></div>
+    <div class="card"><div class="ic" style="background-image:url(04-laser-sm.png)"></div><span class="no">04</span><span class="nm">雷射扇形</span><span class="ds">紅綠雷射從舞台中央射出</span></div>
+    <div class="card"><div class="ic" style="background-image:url(05-spotlight-sm.png)"></div><span class="no">05</span><span class="nm">舞台聚光</span><span class="ds">琥珀色聚光燈下的歌手剪影</span></div>
+    <div class="card"><div class="ic" style="background-image:url(06-equalizer-sm.png)"></div><span class="no">06</span><span class="nm">等化器音波</span><span class="ds">藍到螢光綠的發光音量條</span></div>
+    <div class="card"><div class="ic" style="background-image:url(07-mercury-sm.png)"></div><span class="no">07</span><span class="nm">液態水銀</span><span class="ds">冷冽的鉻色水銀珠，極簡質感</span></div>
+    <div class="card"><div class="ic" style="background-image:url(08-synthwave-sm.png)"></div><span class="no">08</span><span class="nm">合成波夕陽</span><span class="ds">條紋夕陽＋粉紅透視網格</span></div>
+    <div class="card"><div class="ic" style="background-image:url(09-circuit-n-sm.png)"></div><span class="no">09</span><span class="nm">電路 N</span><span class="ds">NEON 的 N 用電路走線組成，橘色脈衝點</span></div>
+    <div class="card"><div class="ic" style="background-image:url(10-neon-mic-sm.png)"></div><span class="no">10</span><span class="nm">霓虹麥克風</span><span class="ds">粉色霓虹燈管麥克風，帶掃描線</span></div>
+  </div>
+
+  <h2>放在主畫面上的樣子</h2>
+  <div class="tg" role="group" aria-label="桌布"><button data-w="dark" aria-pressed="true">深色桌布</button><button data-w="light" aria-pressed="false">淺色桌布</button></div>
+  <div class="home" id="home">
+    <div class="app"><i style="background-image:url(../icons/icon-192.png)"></i>目前</div>
+    <div class="app"><i style="background-image:url(01-chrome-ticket-sm.png)"></i>01</div>
+    <div class="app"><i style="background-image:url(02-iridescent-disc-sm.png)"></i>02</div>
+    <div class="app"><i style="background-image:url(03-lightsticks-sm.png)"></i>03</div>
+    <div class="app"><i style="background-image:url(04-laser-sm.png)"></i>04</div>
+    <div class="app"><i style="background-image:url(05-spotlight-sm.png)"></i>05</div>
+    <div class="app"><i style="background-image:url(06-equalizer-sm.png)"></i>06</div>
+    <div class="app"><i style="background-image:url(07-mercury-sm.png)"></i>07</div>
+    <div class="app"><i style="background-image:url(08-synthwave-sm.png)"></i>08</div>
+    <div class="app"><i style="background-image:url(09-circuit-n-sm.png)"></i>09</div>
+    <div class="app"><i style="background-image:url(10-neon-mic-sm.png)"></i>10</div>
+  </div>
+</main>
+<script>
+document.querySelector('.tg').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('.tg button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  document.getElementById('home').classList.toggle('light', b.dataset.w === 'light');
+});
+</script>
+</body>
+</html>
