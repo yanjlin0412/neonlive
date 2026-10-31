@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>演唱會 App 原型</title>
+<style>
+:root{color-scheme:dark}
+body{margin:0;min-height:100vh;background:#0c0c0e;color:#eef1f6;font-family:-apple-system,"PingFang TC",sans-serif;padding:max(env(safe-area-inset-top),28px) 16px 40px}
+main{max-width:720px;margin:0 auto}
+h1{margin:0;font-size:28px}
+p{color:#a3aab8;margin:6px 0 20px;font-size:14px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+a{display:flex;flex-direction:column;justify-content:flex-end;min-height:150px;padding:16px;border-radius:18px;text-decoration:none;color:inherit;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
+a:active{transform:scale(.98)}
+a b{font-size:19px}
+a span{font-size:13px;opacity:.85;margin-top:2px}
+a small{position:absolute;top:14px;left:16px;font:600 12px ui-monospace,Menlo,monospace;opacity:.8}
+</style>
+</head>
+<body>
+<main>
+  <h1>演唱會紀錄 · 6 款可點原型</h1>
+  <p>每款都能切換分頁、點開詳情、用 ＋ 新增紀錄。資料是範例資料，只存在記憶體，重新整理就會回到原狀。</p>
+  <div class="grid">
+    <a href="01-neon.html" style="background:radial-gradient(80% 80% at 80% 20%,rgba(255,43,214,.5),transparent 60%),radial-gradient(70% 70% at 10% 90%,rgba(0,240,255,.35),transparent 60%),#07080f"><small style="color:#00f0ff">01</small><b>霓虹雨夜</b><span>HUD 主控台 · 5 格分頁 · 票根清單</span></a>
+    <a href="02-chrome.html" style="background:conic-gradient(from 210deg at 70% 30%,#3a3f4a,#8d94a0,#2a2e38,#c9b6ff40,#3a3f4a),#15171d"><small>02</small><b>液態鉻</b><span>3D 卡片輪播 · 懸浮膠囊選單</span></a>
+    <a href="03-terminal.html" style="background:#030805;color:#39ff8a;font-family:ui-monospace,Menlo,monospace"><small>03</small><b>磷光終端</b><span>輸入指令操作 · F1–F4 功能鍵</span></a>
+    <a href="04-orbit.html" style="background:#eceef0;color:#0e0f12"><small style="color:#c23a00">04</small><b>軌道白</b><span>可點的年份軌道 · 拉起式清單</span></a>
+    <a href="05-acid.html" style="background:#d4ff00;color:#0a0a0a"><small>05</small><b>酸性狂歡</b><span>上下滑動的全螢幕動態</span></a>
+    <a href="06-chrome-neon.html" style="background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(0,240,255,.25) 40%,rgba(255,43,214,.3)),#0d0b1d"><small style="color:#00f0ff">06</small><b>鉻霓虹（01×02）</b><span>鉻框票根輪播 · 倒數 · 膠囊選單</span></a>
+  </div>
+</main>
+</body>
+</html>

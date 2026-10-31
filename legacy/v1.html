@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NEON//LIVE</title>
+<meta name="description" content="賽博龐克風格的私人演唱會紀錄器">
+<meta name="theme-color" content="#05060a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NEON LIVE">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ============ 設計 Token ============
+   背景近黑、霓虹只當重點色；內文用近白確保 WCAG 4.5:1 */
+:root{
+  --bg:#05060a;
+  --panel:rgba(11,14,24,.82);
+  --panel-solid:#0b0e18;
+  --line:rgba(0,240,255,.28);
+  --line-soft:rgba(160,180,220,.14);
+  --text:#e9f1ff;
+  --muted:#93a1b8;
+  --cyan:#00f0ff;
+  --magenta:#ff2bd6;
+  --yellow:#fcee0a;
+  --red:#ff3b5c;
+  --green:#3dffa8;
+  --glow-c:0 0 6px rgba(0,240,255,.7),0 0 22px rgba(0,240,255,.35);
+  --glow-m:0 0 6px rgba(255,43,214,.7),0 0 22px rgba(255,43,214,.35);
+  --font-d:"Chakra Petch","PingFang TC","Heiti TC",system-ui,sans-serif;
+  --font-m:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --font-b:-apple-system,"PingFang TC","Heiti TC",system-ui,sans-serif;
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --tab-h:64px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text)}
+body{font-family:var(--font-b);font-size:16px;line-height:1.5;overscroll-behavior:none;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ============ 寫實背景：程序化城市 + 雨 + 顆粒 + 掃描線 ============ */
+#city{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.fx-grain,.fx-scan,.fx-vignette{position:fixed;inset:0;pointer-events:none;z-index:1}
+.fx-grain{opacity:.13;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.fx-scan{background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.18) 2px 3px)}
+.fx-vignette{background:radial-gradient(120% 80% at 50% 40%,transparent 40%,rgba(0,0,0,.65) 100%)}
+body.no-scan .fx-scan{display:none}
+
+/* ============ 版面 ============ */
+#app{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
+.view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(var(--sat) + 12px) 16px calc(var(--tab-h) + var(--sab) + 28px);display:none}
+.view.active{display:block;animation:boot .35s var(--ease)}
+@keyframes boot{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:6px 0 18px}
+.kicker{font-family:var(--font-m);font-size:11px;letter-spacing:.18em;color:var(--cyan);text-transform:uppercase}
+.kicker .dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:6px;box-shadow:0 0 8px var(--green);vertical-align:1px}
+h1.title{font-family:var(--font-d);font-weight:700;font-size:34px;line-height:1.05;margin:4px 0 0;letter-spacing:.02em}
+h2.sec{font-family:var(--font-d);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px;display:flex;align-items:center;gap:10px}
+h2.sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+/* 故障字效果（可在設定關閉） */
+.glitch{position:relative;display:inline-block}
+body:not(.no-glitch) .glitch::before,body:not(.no-glitch) .glitch::after{content:attr(data-text);position:absolute;inset:0;pointer-events:none}
+body:not(.no-glitch) .glitch::before{color:var(--magenta);transform:translate(-2px,0);mix-blend-mode:screen;clip-path:inset(0 0 60% 0);animation:gl1 3.2s infinite steps(1)}
+body:not(.no-glitch) .glitch::after{color:var(--cyan);transform:translate(2px,0);mix-blend-mode:screen;clip-path:inset(55% 0 0 0);animation:gl2 2.7s infinite steps(1)}
+@keyframes gl1{0%,92%{transform:translate(0)}93%{transform:translate(-3px,-1px)}96%{transform:translate(2px,1px)}}
+@keyframes gl2{0%,88%{transform:translate(0)}89%{transform:translate(3px,1px)}94%{transform:translate(-2px,0)}}
+
+/* 面板：斜切角 + 角框 */
+.panel{position:relative;background:var(--panel);border:1px solid var(--line-soft);-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));padding:16px}
+.panel.brk::before,.panel.brk::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--cyan);pointer-events:none}
+.panel.brk::before{top:6px;left:6px;border-right:0;border-bottom:0}
+.panel.brk::after{bottom:6px;right:6px;border-left:0;border-top:0}
+
+.btn{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 18px;font-family:var(--font-d);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:14px;border:1px solid var(--cyan);color:var(--cyan);background:rgba(0,240,255,.06);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));transition:background .15s,transform .1s}
+.btn:active{transform:scale(.97);background:rgba(0,240,255,.18)}
+.btn.solid{background:var(--yellow);color:#0a0a0a;border-color:var(--yellow)}
+.btn.solid:active{background:#fff35a}
+.btn.danger{border-color:var(--red);color:var(--red);background:rgba(255,59,92,.06)}
+.btn.ghost{border-color:var(--line-soft);color:var(--text)}
+.btn.block{width:100%}
+.icon-btn{width:44px;height:44px;display:inline-grid;place-items:center;color:var(--text);border:1px solid var(--line-soft);background:rgba(11,14,24,.6)}
+.icon-btn svg{width:22px;height:22px}
+
+/* ============ 主控台 ============ */
+.hud-next{padding:18px 16px 16px;overflow:hidden}
+.hud-next .lbl{font-family:var(--font-m);font-size:11px;letter-spacing:.2em;color:var(--magenta)}
+.hud-next .artist{font-family:var(--font-d);font-size:26px;font-weight:700;margin:6px 0 2px;line-height:1.15;word-break:break-word}
+.hud-next .meta{color:var(--muted);font-size:14px}
+.count{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.count div{border:1px solid var(--line);padding:8px 0 6px;text-align:center;background:rgba(0,240,255,.04)}
+.count b{display:block;font-family:var(--font-m);font-size:24px;font-weight:600;color:var(--cyan);text-shadow:var(--glow-c);font-variant-numeric:tabular-nums}
+.count span{font-size:11px;color:var(--muted);letter-spacing:.1em}
+.hud-next .scanbar{position:absolute;left:0;right:0;height:40px;top:-40px;background:linear-gradient(to bottom,transparent,rgba(0,240,255,.12),transparent);animation:sweep 4s linear infinite}
+@keyframes sweep{to{top:110%}}
+
+.stats4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{padding:14px}
+.stat b{font-family:var(--font-m);font-size:30px;font-weight:600;display:block;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.stat.c b{color:var(--cyan);text-shadow:var(--glow-c)}
+.stat.m b{color:var(--magenta);text-shadow:var(--glow-m)}
+.stat.y b{color:var(--yellow)}
+.stat.g b{color:var(--green)}
+
+/* ============ 寫實票根卡片 ============ */
+.tickets{display:flex;flex-direction:column;gap:14px}
+.ticket{--acc:var(--cyan);position:relative;display:flex;min-height:132px;width:100%;text-align:left;color:var(--text);
+  background:
+    linear-gradient(105deg,rgba(255,255,255,.06),transparent 40%),
+    repeating-linear-gradient(45deg,rgba(255,255,255,.018) 0 2px,transparent 2px 6px),
+    linear-gradient(160deg,#141a2a,#0a0d16 70%);
+  border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--acc);
+  box-shadow:0 10px 30px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);
+  -webkit-mask:radial-gradient(circle 11px at calc(100% - 92px) 0,transparent 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 11px at calc(100% - 92px) 100%,transparent 98%,#000) bottom/100% 51% no-repeat;
+          mask:radial-gradient(circle 11px at calc(100% - 92px) 0,transparent 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 11px at calc(100% - 92px) 100%,transparent 98%,#000) bottom/100% 51% no-repeat;
+  transition:transform .15s var(--ease)}
+.ticket:active{transform:scale(.985)}
+.ticket.m{--acc:var(--magenta)} .ticket.y{--acc:var(--yellow)}
+.ticket .main{flex:1;min-width:0;padding:14px 14px 12px 14px;display:flex;flex-direction:column;gap:2px;position:relative}
+.ticket .st{font-family:var(--font-m);font-size:10px;letter-spacing:.18em;color:var(--acc)}
+.ticket .ar{font-family:var(--font-d);font-weight:700;font-size:20px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ticket .tr{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ticket .row{margin-top:auto;display:flex;gap:12px;font-family:var(--font-m);font-size:12px;color:#c7d2e6;flex-wrap:wrap}
+.ticket .stub{width:92px;flex:none;border-left:2px dashed rgba(255,255,255,.18);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 6px;position:relative;overflow:hidden}
+.ticket .stub .d{font-family:var(--font-m);font-weight:600;font-size:26px;line-height:1;color:var(--acc)}
+.ticket .stub .mo{font-family:var(--font-m);font-size:11px;letter-spacing:.15em;color:var(--muted)}
+.ticket .stub svg{width:64px;height:22px;opacity:.75}
+.ticket .holo{position:absolute;right:0;top:0;bottom:0;width:6px;background:linear-gradient(180deg,#00f0ff,#ff2bd6,#fcee0a,#3dffa8,#00f0ff);background-size:100% 300%;opacity:.55;animation:holo 6s linear infinite}
+@keyframes holo{to{background-position:0 300%}}
+.ticket .thumb{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.22;filter:grayscale(.3) contrast(1.1);pointer-events:none}
+.ticket .thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0a0d16 10%,rgba(10,13,22,.4))}
+.stars{color:var(--yellow);letter-spacing:1px}
+
+.empty{text-align:center;padding:34px 18px}
+.empty .big{font-family:var(--font-m);font-size:12px;color:var(--magenta);letter-spacing:.2em}
+.empty p{color:var(--muted);margin:10px 0 18px}
+
+/* ============ 檔案庫 ============ */
+.search{display:flex;align-items:center;gap:10px;padding:0 12px;min-height:46px;background:rgba(11,14,24,.85);border:1px solid var(--line)}
+.search svg{width:18px;height:18px;color:var(--cyan);flex:none}
+.search input{flex:1;background:none;border:0;outline:0;font-size:16px;min-height:44px}
+.search input::placeholder{color:#6f7d94}
+.seg{display:flex;margin:12px 0 4px;border:1px solid var(--line-soft);background:rgba(11,14,24,.8)}
+.seg button{flex:1;min-height:40px;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em;position:relative}
+.seg button[aria-pressed="true"]{color:#0a0a0a;background:var(--cyan)}
+.yearhdr{font-family:var(--font-m);color:var(--yellow);font-size:13px;letter-spacing:.2em;margin:20px 0 8px;display:flex;justify-content:space-between}
+.yearhdr span{color:var(--muted)}
+
+/* ============ 數據 ============ */
+.bars{display:flex;align-items:flex-end;gap:8px;height:160px;padding-top:10px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;min-width:0}
+.bars .b i{display:block;width:100%;max-width:34px;background:linear-gradient(to top,rgba(255,43,214,.25),var(--magenta));box-shadow:var(--glow-m);min-height:2px}
+.bars .b em{font-style:normal;font-family:var(--font-m);font-size:11px;color:var(--muted)}
+.bars .b strong{font-family:var(--font-m);font-size:12px;color:var(--text)}
+.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.rank li{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:10px}
+.rank .n{font-family:var(--font-m);color:var(--cyan);font-size:13px}
+.rank .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .meter{grid-column:2/4;height:4px;background:rgba(255,255,255,.06);margin-top:-6px}
+.rank .meter i{display:block;height:100%;background:var(--cyan);box-shadow:var(--glow-c)}
+.rank .v{font-family:var(--font-m);font-size:13px;color:var(--muted)}
+
+/* ============ 設定 ============ */
+.list{display:flex;flex-direction:column}
+.list .item{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:6px 0;border-bottom:1px solid var(--line-soft);width:100%;text-align:left}
+.list .item:last-child{border-bottom:0}
+.list .item small{display:block;color:var(--muted);font-size:12px}
+.switch{position:relative;width:52px;height:32px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border:1px solid var(--line-soft);background:#151a28;transition:.2s}
+.switch span::after{content:"";position:absolute;top:4px;left:4px;width:22px;height:22px;background:var(--muted);transition:.2s var(--ease)}
+.switch input:checked+span{border-color:var(--cyan);background:rgba(0,240,255,.15)}
+.switch input:checked+span::after{left:24px;background:var(--cyan);box-shadow:var(--glow-c)}
+.guide ol{margin:6px 0 0;padding-left:20px;color:#c7d2e6}
+.guide li{margin:4px 0}
+
+/* ============ 底部 Tab Bar（HIG：3–5 個主分頁） ============ */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;height:calc(var(--tab-h) + var(--sab));padding-bottom:var(--sab);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;
+  background:linear-gradient(to top,rgba(5,6,10,.97),rgba(8,10,18,.9));-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid var(--line)}
+.tabbar::before{content:"";position:absolute;left:0;right:0;top:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.8}
+.tab{height:var(--tab-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#7d8aa1;font-size:10px;letter-spacing:.08em;font-weight:600}
+.tab svg{width:24px;height:24px}
+.tab[aria-current="page"]{color:var(--cyan)}
+.tab[aria-current="page"] svg{filter:drop-shadow(0 0 6px rgba(0,240,255,.8))}
+.tab.add{position:relative}
+.tab.add .core{width:56px;height:56px;margin-top:-22px;display:grid;place-items:center;background:var(--yellow);color:#0a0a0a;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));box-shadow:0 0 0 2px #000}
+.tab.add .core svg{width:28px;height:28px}
+.tab.add:active .core{transform:scale(.94)}
+
+/* ============ Sheet（詳情 / 編輯） ============ */
+.sheet{position:fixed;inset:0;z-index:40;display:none}
+.sheet.open{display:block}
+.sheet .scrim{position:absolute;inset:0;background:rgba(0,0,0,.6);animation:fade .2s}
+.sheet .card{position:absolute;left:0;right:0;bottom:0;top:calc(var(--sat) + 10px);background:linear-gradient(180deg,#0d1120,#070910);border-top:1px solid var(--cyan);box-shadow:0 -10px 50px rgba(0,240,255,.15);display:flex;flex-direction:column;animation:up .32s var(--ease);clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,0 100%)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes fade{from{opacity:0}}
+.sheet .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line-soft);min-height:56px}
+.sheet .bar .t{font-family:var(--font-m);font-size:12px;letter-spacing:.2em;color:var(--cyan)}
+.sheet .body{flex:1;overflow-y:auto;padding:16px 16px calc(var(--sab) + 30px);-webkit-overflow-scrolling:touch}
+.grip{position:absolute;top:6px;left:50%;width:40px;height:4px;margin-left:-20px;background:rgba(255,255,255,.25);border-radius:2px}
+
+/* 詳情 */
+.hero{position:relative;margin:-16px -16px 16px;height:240px;overflow:hidden;background:#0a0d16}
+.hero .img{position:absolute;inset:0;background-size:cover;background-position:center;filter:contrast(1.08) saturate(1.1)}
+.hero .img.gen{background:radial-gradient(60% 80% at 70% 20%,rgba(255,43,214,.55),transparent 60%),radial-gradient(60% 70% at 20% 80%,rgba(0,240,255,.45),transparent 60%),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,transparent 1px 24px),#090b14}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,#0d1120 2%,rgba(13,17,32,.2) 60%,rgba(13,17,32,.5));pointer-events:none}
+.hero .cap{position:absolute;left:16px;right:16px;bottom:12px;z-index:2}
+.hero .cap .ar{font-family:var(--font-d);font-size:30px;font-weight:700;line-height:1.1;text-shadow:0 2px 12px #000;word-break:break-word}
+.hero .cap .tr{color:#d8e2f5;font-size:15px;text-shadow:0 1px 6px #000}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-m);font-size:11px;letter-spacing:.15em;padding:4px 8px;border:1px solid currentColor;margin-bottom:8px;background:rgba(0,0,0,.4)}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
+.facts div{background:#0b0e18;padding:10px 12px;min-width:0}
+.facts dt{font-family:var(--font-m);font-size:10px;letter-spacing:.18em;color:var(--muted)}
+.facts dd{margin:2px 0 0;font-size:15px;word-break:break-word}
+.setlist{counter-reset:s;list-style:none;margin:0;padding:0}
+.setlist li{counter-increment:s;display:flex;gap:12px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line-soft)}
+.setlist li::before{content:counter(s,decimal-leading-zero);font-family:var(--font-m);font-size:12px;color:var(--cyan);width:22px;flex:none}
+.setlist li.enc-h{counter-increment:none;border:0;padding:14px 0 4px;font-family:var(--font-m);font-size:11px;letter-spacing:.25em;color:var(--magenta)}
+.setlist li.enc-h::before{content:"//";color:var(--magenta)}
+.notes{white-space:pre-wrap;color:#d3dcee}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.gallery button{aspect-ratio:1;background-size:cover;background-position:center;border:1px solid var(--line-soft)}
+
+/* 表單 */
+.form{display:flex;flex-direction:column;gap:14px}
+.field label,.flabel{display:block;font-family:var(--font-m);font-size:11px;letter-spacing:.18em;color:var(--cyan);margin-bottom:6px;text-transform:uppercase}
+.field label em{color:var(--magenta);font-style:normal}
+.field input,.field textarea,.field select{width:100%;min-height:46px;padding:10px 12px;background:rgba(5,6,10,.8);border:1px solid var(--line-soft);font-size:16px;outline:0;border-radius:0;-webkit-appearance:none;appearance:none}
+.field textarea{min-height:96px;resize:vertical;line-height:1.5}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 16px rgba(0,240,255,.25)}
+.field .hint{font-size:12px;color:var(--muted);margin-top:4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.price{display:grid;grid-template-columns:1fr 92px;gap:8px}
+.rate{display:flex;gap:2px}
+.rate button{width:44px;height:44px;font-size:28px;line-height:1;color:#3a4357}
+.rate button.on{color:var(--yellow);text-shadow:0 0 10px rgba(252,238,10,.6)}
+.swatches{display:flex;gap:10px}
+.swatches button{width:44px;height:44px;border:2px solid transparent;position:relative}
+.swatches button[aria-pressed="true"]{border-color:#fff}
+.photos-edit{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.photos-edit .ph{position:relative;aspect-ratio:1;background-size:cover;background-position:center;border:1px solid var(--line-soft)}
+.photos-edit .ph button{position:absolute;top:0;right:0;width:32px;height:32px;background:rgba(0,0,0,.7);color:var(--red);font-size:18px}
+.photos-edit label.addph{aspect-ratio:1;display:grid;place-items:center;border:1px dashed var(--cyan);color:var(--cyan);font-size:28px;cursor:pointer}
+
+/* 燈箱 + 提示 */
+.lightbox{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+.lightbox .icon-btn{position:absolute;top:calc(var(--sat) + 10px);right:12px}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(var(--tab-h) + var(--sab) + 14px);z-index:70;padding:12px 14px;background:#0b0e18;border:1px solid var(--green);color:var(--text);font-size:14px;font-family:var(--font-m);transform:translateY(20px);opacity:0;transition:.25s var(--ease);pointer-events:none;box-shadow:0 0 20px rgba(61,255,168,.25)}
+.toast.show{transform:none;opacity:1}
+
+@media (min-width:700px){.view{max-width:640px;margin:0 auto;left:0;right:0}.sheet .card{max-width:640px;margin:0 auto}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+body.calm .hud-next .scanbar,body.calm .ticket .holo{animation:none}
+</style>
+</head>
+<body>
+<canvas id="city" aria-hidden="true"></canvas>
+<div class="fx-vignette" aria-hidden="true"></div>
+<div class="fx-scan" aria-hidden="true"></div>
+<div class="fx-grain" aria-hidden="true"></div>
+
+<div id="app">
+  <!-- 主控台 -->
+  <main class="view active" id="v-home" aria-label="主控台">
+    <header class="topbar">
+      <div>
+        <div class="kicker"><span class="dot"></span>SYS.ONLINE // <span id="clock">--:--</span></div>
+        <h1 class="title"><span class="glitch" data-text="NEON//LIVE">NEON//LIVE</span></h1>
+      </div>
+    </header>
+    <section id="home-next"></section>
+    <h2 class="sec">記憶體核心</h2>
+    <section class="stats4" id="home-stats"></section>
+    <h2 class="sec">最近紀錄</h2>
+    <section class="tickets" id="home-recent"></section>
+  </main>
+
+  <!-- 檔案庫 -->
+  <main class="view" id="v-archive" aria-label="檔案庫">
+    <header class="topbar"><div><div class="kicker">ARCHIVE // 全部場次</div><h1 class="title">檔案庫</h1></div></header>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <label class="sr" for="q">搜尋</label>
+      <input id="q" type="search" placeholder="搜尋藝人、場館、城市、歌曲…" autocomplete="off">
+    </div>
+    <div class="seg" role="group" aria-label="狀態篩選" id="filter">
+      <button data-f="all" aria-pressed="true">全部</button>
+      <button data-f="attended" aria-pressed="false">已參加</button>
+      <button data-f="going" aria-pressed="false">即將</button>
+      <button data-f="wish" aria-pressed="false">願望</button>
+    </div>
+    <section id="archive-list"></section>
+  </main>
+
+  <!-- 數據 -->
+  <main class="view" id="v-stats" aria-label="數據">
+    <header class="topbar"><div><div class="kicker">ANALYTICS // 演出數據</div><h1 class="title">數據分析</h1></div></header>
+    <section id="stats-body"></section>
+  </main>
+
+  <!-- 系統 -->
+  <main class="view" id="v-settings" aria-label="系統設定">
+    <header class="topbar"><div><div class="kicker">SYSTEM // CONFIG</div><h1 class="title">系統</h1></div></header>
+    <h2 class="sec">視覺效果</h2>
+    <div class="panel list">
+      <label class="item"><div>城市雨景動畫<small>背景下雨與霓虹閃爍（省電可關）</small></div><span class="switch"><input type="checkbox" id="opt-rain"><span></span></span></label>
+      <label class="item"><div>CRT 掃描線<small>螢幕掃描線質感</small></div><span class="switch"><input type="checkbox" id="opt-scan"><span></span></span></label>
+      <label class="item"><div>故障字特效<small>標題的色偏抖動</small></div><span class="switch"><input type="checkbox" id="opt-glitch"><span></span></span></label>
+    </div>
+    <h2 class="sec">資料備份</h2>
+    <div class="panel brk">
+      <p style="margin:0 0 12px;color:#c7d2e6;font-size:14px">所有資料只存在這支 iPhone 上，不會上傳任何伺服器。建議定期匯出備份（含照片）到「檔案」App 或 iCloud Drive。</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn solid block" id="btn-export">匯出備份 JSON</button>
+        <label class="btn block" for="import-file">匯入備份</label>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+        <button class="btn ghost block" id="btn-demo">載入範例資料</button>
+      </div>
+      <p id="storage-info" style="margin:12px 0 0;color:var(--muted);font-family:var(--font-m);font-size:12px"></p>
+    </div>
+    <h2 class="sec">安裝到主畫面</h2>
+    <div class="panel guide">
+      <ol>
+        <li>用 <b>Safari</b> 開啟本網址</li>
+        <li>點下方 <b>分享</b> 按鈕 <span aria-hidden="true">⎋</span></li>
+        <li>選擇 <b>加入主畫面</b>，再按 <b>新增</b></li>
+        <li>從主畫面圖示開啟即為全螢幕 App，可離線使用</li>
+      </ol>
+    </div>
+    <h2 class="sec">危險區域</h2>
+    <button class="btn danger block" id="btn-wipe">清除全部資料</button>
+    <p style="text-align:center;color:var(--muted);font-family:var(--font-m);font-size:11px;margin-top:22px;letter-spacing:.15em">NEON//LIVE v1.0 · LOCAL BUILD</p>
+  </main>
+</div>
+
+<nav class="tabbar" aria-label="主要分頁">
+  <button class="tab" data-view="home" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg>主控台</button>
+  <button class="tab" data-view="archive">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h18v13H3zM6 4h12M8 11h8M8 15h5"/></svg>檔案庫</button>
+  <button class="tab add" id="tab-add" aria-label="新增演唱會">
+    <span class="core"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg></span></button>
+  <button class="tab" data-view="stats">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>數據</button>
+  <button class="tab" data-view="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>系統</button>
+</nav>
+
+<!-- 詳情 -->
+<div class="sheet" id="sheet-detail" role="dialog" aria-modal="true" aria-labelledby="d-title">
+  <div class="scrim" data-close></div>
+  <div class="card">
+    <div class="grip"></div>
+    <div class="bar">
+      <button class="icon-btn" data-close aria-label="關閉"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      <span class="t" id="d-title">SHOW.RECORD</span>
+      <button class="btn" id="d-edit" style="padding:0 14px">編輯</button>
+    </div>
+    <div class="body" id="d-body"></div>
+  </div>
+</div>
+
+<!-- 編輯 -->
+<div class="sheet" id="sheet-edit" role="dialog" aria-modal="true" aria-labelledby="e-title">
+  <div class="scrim"></div>
+  <div class="card">
+    <div class="grip"></div>
+    <div class="bar">
+      <button class="btn ghost" data-close style="padding:0 14px">取消</button>
+      <span class="t" id="e-title">NEW.ENTRY</span>
+      <button class="btn solid" id="e-save" style="padding:0 16px">儲存</button>
+    </div>
+    <div class="body">
+      <form class="form" id="form" autocomplete="off" onsubmit="return false">
+        <div>
+          <span class="flabel">狀態</span>
+          <div class="seg" role="group" aria-label="狀態" id="f-status" style="margin:0">
+            <button type="button" data-s="attended" aria-pressed="true">已參加</button>
+            <button type="button" data-s="going" aria-pressed="false">即將前往</button>
+            <button type="button" data-s="wish" aria-pressed="false">願望清單</button>
+          </div>
+        </div>
+        <div class="field"><label for="f-artist">藝人 / 樂團 <em>*</em></label><input id="f-artist" required list="dl-artist" enterkeyhint="next"></div>
+        <div class="field"><label for="f-tour">巡演 / 活動名稱</label><input id="f-tour" enterkeyhint="next"></div>
+        <div class="two">
+          <div class="field"><label for="f-date">日期 <em>*</em></label><input id="f-date" type="date" required></div>
+          <div class="field"><label for="f-time">開演時間</label><input id="f-time" type="time"></div>
+        </div>
+        <div class="field"><label for="f-venue">場館</label><input id="f-venue" list="dl-venue"></div>
+        <div class="two">
+          <div class="field"><label for="f-city">城市</label><input id="f-city" list="dl-city"></div>
+          <div class="field"><label for="f-seat">座位 / 區域</label><input id="f-seat" placeholder="例：搖滾A區"></div>
+        </div>
+        <div class="field">
+          <label for="f-price">票價</label>
+          <div class="price"><input id="f-price" type="number" inputmode="decimal" min="0" step="1"><select id="f-cur" aria-label="幣別"><option>TWD</option><option>JPY</option><option>KRW</option><option>USD</option><option>HKD</option><option>CNY</option><option>EUR</option><option>GBP</option></select></div>
+        </div>
+        <div class="field"><span class="flabel">評分</span><div class="rate" id="f-rate" role="radiogroup" aria-label="評分"></div></div>
+        <div class="field"><label for="f-with">同行者</label><input id="f-with" placeholder="用逗號分隔"></div>
+        <div class="field">
+          <label for="f-setlist">歌單 SETLIST</label>
+          <textarea id="f-setlist" rows="8" placeholder="一行一首歌&#10;安可前輸入一行：ENCORE"></textarea>
+          <div class="hint">一行一首；輸入一行「ENCORE」或「安可」作為分隔。</div>
+        </div>
+        <div class="field"><label for="f-notes">心得 / 回憶</label><textarea id="f-notes" rows="5"></textarea></div>
+        <div class="field">
+          <span class="flabel">照片</span>
+          <div class="photos-edit" id="f-photos"></div>
+          <div class="hint">照片會自動壓縮後存在手機本機。</div>
+        </div>
+        <div class="field">
+          <span class="flabel">票根配色</span>
+          <div class="swatches" id="f-color">
+            <button type="button" data-c="c" style="background:var(--cyan)" aria-label="青色" aria-pressed="true"></button>
+            <button type="button" data-c="m" style="background:var(--magenta)" aria-label="洋紅" aria-pressed="false"></button>
+            <button type="button" data-c="y" style="background:var(--yellow)" aria-label="黃色" aria-pressed="false"></button>
+          </div>
+        </div>
+        <button type="button" class="btn danger block" id="e-delete" hidden>刪除這筆紀錄</button>
+      </form>
+    </div>
+  </div>
+</div>
+<datalist id="dl-artist"></datalist><datalist id="dl-venue"></datalist><datalist id="dl-city"></datalist>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-label="照片">
+  <img alt="">
+  <button class="icon-btn" aria-label="關閉"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ================= 儲存層：IndexedDB（場次 + 照片 Blob） ================= */
+const DB = (() => {
+  let dbp;
+  const open = () => dbp ||= new Promise((res, rej) => {
+    const r = indexedDB.open('neonlive', 1);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      db.createObjectStore('shows', { keyPath: 'id' });
+      db.createObjectStore('photos', { keyPath: 'id' });
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  const tx = async (store, mode, fn) => {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction(store, mode);
+      const out = fn(t.objectStore(store));
+      t.oncomplete = () => res(out && 'result' in out ? out.result : out);
+      t.onerror = () => rej(t.error);
+    });
+  };
+  return {
+    all: (s) => tx(s, 'readonly', (o) => o.getAll()),
+    get: (s, id) => tx(s, 'readonly', (o) => o.get(id)),
+    put: (s, v) => tx(s, 'readwrite', (o) => o.put(v)),
+    del: (s, id) => tx(s, 'readwrite', (o) => o.delete(id)),
+    clear: (s) => tx(s, 'readwrite', (o) => o.clear())
+  };
+})();
+
+/* ================= 工具 ================= */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const STATUS = { attended: { t: 'ATTENDED // 已參加', c: 'var(--green)' }, going: { t: 'INCOMING // 即將前往', c: 'var(--cyan)' }, wish: { t: 'WISHLIST // 願望', c: 'var(--magenta)' } };
+const stars = (n) => '★'.repeat(n || 0) + '☆'.repeat(5 - (n || 0));
+const fmtMoney = (n, c) => n ? `${c} ${Number(n).toLocaleString()}` : '—';
+const toast = (msg) => { const t = $('#toast'); t.textContent = '> ' + msg; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 2200); };
+
+// 由 id 產生條碼（票根的寫實細節）
+function barcode(seed) {
+  let h = 0; for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  let x = 0, r = '';
+  while (x < 64) { h = (h * 1103515245 + 12345) >>> 0; const w = 1 + (h >>> 16) % 3; if ((h >>> 8) & 3) r += `<rect x="${x}" width="${w}" height="22"/>`; x += w + 1; }
+  return `<svg viewBox="0 0 64 22" fill="currentColor" aria-hidden="true">${r}</svg>`;
+}
+
+/* 照片：壓縮成最長邊 1600px JPEG，避免塞爆手機空間 */
+async function compress(file) {
+  const bmp = await createImageBitmap(file).catch(() => null);
+  let src = bmp;
+  if (!src) { src = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); }); }
+  const max = 1600, k = Math.min(1, max / Math.max(src.width, src.height));
+  const c = document.createElement('canvas'); c.width = Math.round(src.width * k); c.height = Math.round(src.height * k);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  return new Promise((res) => c.toBlob(res, 'image/jpeg', .82));
+}
+const urlCache = new Map();
+async function photoURL(id) {
+  if (urlCache.has(id)) return urlCache.get(id);
+  const p = await DB.get('photos', id); if (!p) return '';
+  const u = URL.createObjectURL(p.blob); urlCache.set(id, u); return u;
+}
+
+/* ================= 狀態 ================= */
+let shows = [];
+let filter = 'all', query = '';
+async function load() {
+  shows = await DB.all('shows');
+  shows.sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+  // 已過日期的「即將前往」自動轉為「已參加」
+  const t = today();
+  for (const s of shows) if (s.status === 'going' && s.date < t) { s.status = 'attended'; await DB.put('shows', s); }
+  renderAll();
+}
+function renderAll() { renderHome(); renderArchive(); renderStats(); renderDatalists(); }
+
+/* ================= 票根 ================= */
+async function ticketHTML(s) {
+  const [y, m, d] = (s.date || '----').split('-');
+  const thumb = s.photos?.[0] ? await photoURL(s.photos[0]) : '';
+  return `<button class="ticket ${s.color || 'c'}" data-id="${s.id}" aria-label="${esc(s.artist)} ${esc(s.date)}">
+    ${thumb ? `<span class="thumb" style="background-image:url('${thumb}')"></span>` : ''}
+    <span class="main">
+      <span class="st" style="color:${STATUS[s.status].c}">${STATUS[s.status].t}</span>
+      <span class="ar">${esc(s.artist)}</span>
+      <span class="tr">${esc(s.tour || '—')}</span>
+      <span class="row"><span>◉ ${esc(s.venue || '未填場館')}</span>${s.rating ? `<span class="stars">${stars(s.rating)}</span>` : ''}</span>
+    </span>
+    <span class="stub">
+      <span class="d">${d || '--'}</span><span class="mo">${MON[+m - 1] || '---'} ${y?.slice(2) || ''}</span>${barcode(s.id)}
+    </span>
+    <span class="holo"></span>
+  </button>`;
+}
+const ticketsHTML = async (list) => (await Promise.all(list.map(ticketHTML))).join('');
+
+/* ================= 主控台 ================= */
+let cdTimer;
+async function renderHome() {
+  const t = today();
+  const next = shows.filter((s) => s.status === 'going' && s.date >= t).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const box = $('#home-next');
+  clearInterval(cdTimer);
+  if (next) {
+    box.innerHTML = `<button class="panel brk hud-next" data-id="${next.id}" style="width:100%;text-align:left;color:inherit">
+      <span class="scanbar"></span>
+      <div class="lbl">▶ NEXT TARGET // 下一場</div>
+      <div class="artist">${esc(next.artist)}</div>
+      <div class="meta">${esc(next.date)}${next.time ? ' ' + esc(next.time) : ''} · ${esc(next.venue || '場館未定')}${next.city ? ' · ' + esc(next.city) : ''}</div>
+      <div class="count" id="cd"></div></button>`;
+    const target = new Date(`${next.date}T${next.time || '19:00'}`);
+    const tick = () => {
+      let ms = Math.max(0, target - new Date());
+      const D = Math.floor(ms / 864e5); ms -= D * 864e5;
+      const H = Math.floor(ms / 36e5); ms -= H * 36e5;
+      const M = Math.floor(ms / 6e4); const S = Math.floor((ms % 6e4) / 1e3);
+      const p = (n) => String(n).padStart(2, '0');
+      const el = $('#cd'); if (el) el.innerHTML = `<div><b>${p(D)}</b><span>天</span></div><div><b>${p(H)}</b><span>時</span></div><div><b>${p(M)}</b><span>分</span></div><div><b>${p(S)}</b><span>秒</span></div>`;
+    };
+    tick(); cdTimer = setInterval(tick, 1000);
+  } else {
+    box.innerHTML = `<div class="panel brk hud-next"><div class="lbl">▶ NEXT TARGET // 下一場</div><div class="artist" style="font-size:20px">尚無排程</div><div class="meta">新增一場「即將前往」的演唱會，這裡會開始倒數。</div></div>`;
+  }
+  const att = shows.filter((s) => s.status === 'attended');
+  const yr = t.slice(0, 4);
+  $('#home-stats').innerHTML = [
+    ['c', att.length, '已參加場次'],
+    ['m', new Set(att.map((s) => s.artist.trim().toLowerCase())).size, '不同藝人'],
+    ['y', new Set(att.filter((s) => s.venue).map((s) => s.venue.trim())).size, '去過場館'],
+    ['g', att.filter((s) => s.date.startsWith(yr)).length, `${yr} 年場次`]
+  ].map(([c, v, l]) => `<div class="panel stat ${c}"><b>${v}</b><span>${l}</span></div>`).join('');
+
+  const recent = shows.filter((s) => s.status === 'attended').slice(0, 3);
+  $('#home-recent').innerHTML = recent.length ? await ticketsHTML(recent) :
+    `<div class="panel empty"><div class="big">NO DATA // 記憶體空白</div><p>記錄你的第一場演唱會，<br>或到「系統」載入範例資料看看效果。</p><button class="btn solid" data-new>＋ 新增演唱會</button></div>`;
+}
+
+/* ================= 檔案庫 ================= */
+async function renderArchive() {
+  const q = query.trim().toLowerCase();
+  const list = shows.filter((s) => (filter === 'all' || s.status === filter) &&
+    (!q || [s.artist, s.tour, s.venue, s.city, s.companions, s.setlist, s.notes].join(' ').toLowerCase().includes(q)));
+  const el = $('#archive-list');
+  if (!list.length) { el.innerHTML = `<div class="panel empty" style="margin-top:16px"><div class="big">0 RESULTS</div><p>${shows.length ? '沒有符合條件的紀錄' : '還沒有任何紀錄'}</p></div>`; return; }
+  const groups = {};
+  for (const s of list) (groups[s.date.slice(0, 4)] ||= []).push(s);
+  let html = '';
+  for (const y of Object.keys(groups).sort().reverse()) {
+    html += `<div class="yearhdr">// ${y}<span>${groups[y].length} 場</span></div><div class="tickets">${await ticketsHTML(groups[y])}</div>`;
+  }
+  el.innerHTML = html;
+}
+
+/* ================= 數據 ================= */
+function topN(arr, key, n = 5) {
+  const m = new Map();
+  for (const s of arr) { const k = (s[key] || '').trim(); if (k) m.set(k, (m.get(k) || 0) + 1); }
+  return [...m].sort((a, b) => b[1] - a[1]).slice(0, n);
+}
+function rankHTML(rows) {
+  if (!rows.length) return '<p style="color:var(--muted);margin:0">尚無資料</p>';
+  const max = rows[0][1];
+  return `<ol class="rank">${rows.map(([k, v], i) => `<li><span class="n">${String(i + 1).padStart(2, '0')}</span><span class="nm">${esc(k)}</span><span class="v">${v} 場</span><span class="meter"><i style="width:${(v / max) * 100}%"></i></span></li>`).join('')}</ol>`;
+}
+function renderStats() {
+  const att = shows.filter((s) => s.status === 'attended');
+  const el = $('#stats-body');
+  if (!att.length) { el.innerHTML = `<div class="panel empty"><div class="big">AWAITING INPUT</div><p>至少記錄一場「已參加」的演出後，這裡會顯示分析。</p></div>`; return; }
+  const years = {};
+  for (const s of att) { const y = s.date.slice(0, 4); years[y] = (years[y] || 0) + 1; }
+  const ys = Object.keys(years).sort().slice(-7);
+  const ymax = Math.max(...ys.map((y) => years[y]));
+  const spend = {};
+  for (const s of att) if (s.price) spend[s.currency || 'TWD'] = (spend[s.currency || 'TWD'] || 0) + Number(s.price);
+  const rated = att.filter((s) => s.rating);
+  const avg = rated.length ? (rated.reduce((a, s) => a + s.rating, 0) / rated.length).toFixed(1) : '—';
+  const songs = att.reduce((a, s) => a + (s.setlist ? s.setlist.split('\n').filter((l) => l.trim() && !isEncore(l)).length : 0), 0);
+  const first = att[att.length - 1];
+
+  el.innerHTML = `
+    <div class="stats4">
+      <div class="panel stat c"><b>${att.length}</b><span>總場次</span></div>
+      <div class="panel stat y"><b>${avg}</b><span>平均評分</span></div>
+      <div class="panel stat m"><b>${songs}</b><span>現場聽過的歌</span></div>
+      <div class="panel stat g"><b>${new Set(att.filter((s) => s.city).map((s) => s.city.trim())).size}</b><span>城市</span></div>
+    </div>
+    <h2 class="sec">年度場次</h2>
+    <div class="panel"><div class="bars" role="img" aria-label="各年度場次">${ys.map((y) => `<div class="b"><strong>${years[y]}</strong><i style="height:${(years[y] / ymax) * 100}%"></i><em>${y}</em></div>`).join('')}</div></div>
+    <h2 class="sec">最常看的藝人</h2><div class="panel">${rankHTML(topN(att, 'artist'))}</div>
+    <h2 class="sec">最常去的場館</h2><div class="panel">${rankHTML(topN(att, 'venue'))}</div>
+    <h2 class="sec">票券花費</h2>
+    <div class="panel list">${Object.keys(spend).length ? Object.entries(spend).map(([c, v]) => `<div class="item"><span>${c}</span><b style="font-family:var(--font-m);color:var(--yellow)">${v.toLocaleString()}</b></div>`).join('') : '<p style="margin:0;color:var(--muted)">尚未填寫票價</p>'}</div>
+    <h2 class="sec">起點</h2>
+    <div class="panel brk"><div class="kicker">FIRST LOG</div><div style="font-family:var(--font-d);font-size:20px;font-weight:700;margin-top:4px">${esc(first.artist)}</div><div style="color:var(--muted)">${esc(first.date)} · ${esc(first.venue || '')}</div></div>`;
+}
+function renderDatalists() {
+  const fill = (id, key) => { $(id).innerHTML = [...new Set(shows.map((s) => (s[key] || '').trim()).filter(Boolean))].map((v) => `<option value="${esc(v)}">`).join(''); };
+  fill('#dl-artist', 'artist'); fill('#dl-venue', 'venue'); fill('#dl-city', 'city');
+}
+
+/* ================= 導覽 ================= */
+function go(v) {
+  $$('.view').forEach((el) => el.classList.toggle('active', el.id === 'v-' + v));
+  $$('.tab[data-view]').forEach((b) => b.dataset.view === v ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
+  $('#v-' + v).scrollTop = 0;
+}
+$$('.tab[data-view]').forEach((b) => b.addEventListener('click', () => go(b.dataset.view)));
+$('#tab-add').addEventListener('click', () => openEditor());
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-id]'); if (t && !t.closest('.sheet')) openDetail(t.dataset.id);
+  if (e.target.closest('[data-new]')) openEditor();
+});
+$('#filter').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  filter = b.dataset.f; $$('#filter button').forEach((x) => x.setAttribute('aria-pressed', x === b)); renderArchive();
+});
+$('#q').addEventListener('input', (e) => { query = e.target.value; renderArchive(); });
+
+/* ================= Sheet ================= */
+function openSheet(el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeSheet(el) { el.classList.remove('open'); if (!$('.sheet.open')) document.body.style.overflow = ''; }
+$$('.sheet').forEach((sh) => sh.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeSheet(sh); }));
+
+const isEncore = (l) => /^\s*(encore|安可|アンコール|앵콜)\s*[:：]?\s*$/i.test(l);
+let current = null;
+async function openDetail(id) {
+  const s = shows.find((x) => x.id === id); if (!s) return;
+  current = s;
+  const photos = await Promise.all((s.photos || []).map(photoURL));
+  const lines = (s.setlist || '').split('\n').map((l) => l.trim()).filter(Boolean);
+  const setHTML = lines.length ? `<ol class="setlist">${lines.map((l) => isEncore(l) ? `<li class="enc-h">ENCORE</li>` : `<li>${esc(l)}</li>`).join('')}</ol>` : '';
+  const st = STATUS[s.status];
+  $('#d-body').innerHTML = `
+    <div class="hero"><div class="img ${photos[0] ? '' : 'gen'}" ${photos[0] ? `style="background-image:url('${photos[0]}')"` : ''}></div>
+      <div class="cap"><span class="chip" style="color:${st.c}">● ${st.t}</span><div class="ar">${esc(s.artist)}</div>${s.tour ? `<div class="tr">${esc(s.tour)}</div>` : ''}</div></div>
+    <dl class="facts" style="margin:0">
+      <div><dt>DATE</dt><dd>${esc(s.date)}${s.time ? ' ' + esc(s.time) : ''}</dd></div>
+      <div><dt>RATING</dt><dd class="stars">${s.rating ? stars(s.rating) : '—'}</dd></div>
+      <div><dt>VENUE</dt><dd>${esc(s.venue || '—')}</dd></div>
+      <div><dt>CITY</dt><dd>${esc(s.city || '—')}</dd></div>
+      <div><dt>SEAT</dt><dd>${esc(s.seat || '—')}</dd></div>
+      <div><dt>PRICE</dt><dd>${esc(fmtMoney(s.price, s.currency))}</dd></div>
+      ${s.companions ? `<div style="grid-column:1/3"><dt>WITH</dt><dd>${esc(s.companions)}</dd></div>` : ''}
+    </dl>
+    ${setHTML ? `<h2 class="sec">SETLIST · ${lines.filter((l) => !isEncore(l)).length} 首</h2>${setHTML}` : ''}
+    ${s.notes ? `<h2 class="sec">回憶紀錄</h2><div class="panel brk notes">${esc(s.notes)}</div>` : ''}
+    ${photos.length ? `<h2 class="sec">影像 · ${photos.length}</h2><div class="gallery">${photos.map((u) => `<button data-photo="${u}" style="background-image:url('${u}')" aria-label="放大照片"></button>`).join('')}</div>` : ''}`;
+  openSheet($('#sheet-detail'));
+  $('#d-body').scrollTop = 0;
+}
+$('#d-body').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-photo]'); if (!b) return;
+  $('#lightbox img').src = b.dataset.photo; $('#lightbox').classList.add('open');
+});
+$('#lightbox').addEventListener('click', () => $('#lightbox').classList.remove('open'));
+$('#d-edit').addEventListener('click', () => { closeSheet($('#sheet-detail')); openEditor(current); });
+
+/* ================= 編輯器 ================= */
+let draft = null; // { ...show, newPhotos: [{id, blob, url}], removed: [] }
+const segPick = (wrap, attr, val) => $$(`button`, wrap).forEach((b) => b.setAttribute('aria-pressed', b.dataset[attr] === val));
+function rateUI(n) {
+  $('#f-rate').innerHTML = [1, 2, 3, 4, 5].map((i) => `<button type="button" role="radio" aria-checked="${i === n}" aria-label="${i} 顆星" data-r="${i}" class="${i <= n ? 'on' : ''}">★</button>`).join('');
+}
+async function photosUI() {
+  const kept = await Promise.all(draft.photos.map(async (id) => ({ id, url: await photoURL(id) })));
+  const all = [...kept, ...draft.newPhotos];
+  $('#f-photos').innerHTML = all.map((p) => `<div class="ph" style="background-image:url('${p.url}')"><button type="button" data-rm="${p.id}" aria-label="移除照片">×</button></div>`).join('') +
+    `<label class="addph" aria-label="加入照片">＋<input type="file" accept="image/*" multiple hidden id="f-file"></label>`;
+}
+function openEditor(s) {
+  const isNew = !s;
+  draft = s ? { ...s, photos: [...(s.photos || [])] } : { id: uid(), status: 'attended', date: today(), rating: 0, currency: 'TWD', color: 'c', photos: [] };
+  draft.newPhotos = []; draft.removed = [];
+  $('#e-title').textContent = isNew ? 'NEW.ENTRY' : 'EDIT.ENTRY';
+  $('#e-delete').hidden = isNew;
+  const map = { artist: 'f-artist', tour: 'f-tour', date: 'f-date', time: 'f-time', venue: 'f-venue', city: 'f-city', seat: 'f-seat', price: 'f-price', currency: 'f-cur', companions: 'f-with', setlist: 'f-setlist', notes: 'f-notes' };
+  for (const [k, id] of Object.entries(map)) $('#' + id).value = draft[k] ?? '';
+  if (!draft.currency) $('#f-cur').value = 'TWD';
+  segPick($('#f-status'), 's', draft.status);
+  segPick($('#f-color'), 'c', draft.color || 'c');
+  rateUI(draft.rating || 0);
+  photosUI();
+  openSheet($('#sheet-edit'));
+  $('#sheet-edit .body').scrollTop = 0;
+}
+$('#f-status').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { draft.status = b.dataset.s; segPick($('#f-status'), 's', draft.status); } });
+$('#f-color').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { draft.color = b.dataset.c; segPick($('#f-color'), 'c', draft.color); } });
+$('#f-rate').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { const r = +b.dataset.r; draft.rating = draft.rating === r ? 0 : r; rateUI(draft.rating); } });
+$('#f-date').addEventListener('change', (e) => {
+  // 依日期自動建議狀態
+  if (e.target.value > today() && draft.status === 'attended') { draft.status = 'going'; segPick($('#f-status'), 's', 'going'); }
+  if (e.target.value < today() && draft.status === 'going') { draft.status = 'attended'; segPick($('#f-status'), 's', 'attended'); }
+});
+$('#f-photos').addEventListener('change', async (e) => {
+  if (e.target.id !== 'f-file') return;
+  toast('處理照片中…');
+  for (const f of e.target.files) {
+    const blob = await compress(f); if (!blob) continue;
+    draft.newPhotos.push({ id: uid(), blob, url: URL.createObjectURL(blob) });
+  }
+  photosUI();
+});
+$('#f-photos').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-rm]'); if (!b) return;
+  const id = b.dataset.rm;
+  if (draft.photos.includes(id)) { draft.photos = draft.photos.filter((x) => x !== id); draft.removed.push(id); }
+  else draft.newPhotos = draft.newPhotos.filter((p) => p.id !== id);
+  photosUI();
+});
+$('#e-save').addEventListener('click', async () => {
+  const artist = $('#f-artist').value.trim(), date = $('#f-date').value;
+  if (!artist || !date) { toast(!artist ? '請輸入藝人名稱' : '請選擇日期'); (!artist ? $('#f-artist') : $('#f-date')).focus(); return; }
+  for (const p of draft.newPhotos) { await DB.put('photos', { id: p.id, blob: p.blob }); urlCache.set(p.id, p.url); draft.photos.push(p.id); }
+  for (const id of draft.removed) await DB.del('photos', id);
+  const s = {
+    id: draft.id, status: draft.status, color: draft.color || 'c', rating: draft.rating || 0, photos: draft.photos,
+    artist, date, tour: $('#f-tour').value.trim(), time: $('#f-time').value, venue: $('#f-venue').value.trim(), city: $('#f-city').value.trim(),
+    seat: $('#f-seat').value.trim(), price: $('#f-price').value ? Number($('#f-price').value) : null, currency: $('#f-cur').value,
+    companions: $('#f-with').value.trim(), setlist: $('#f-setlist').value.trim(), notes: $('#f-notes').value.trim(),
+    created: draft.created || Date.now(), updated: Date.now()
+  };
+  await DB.put('shows', s);
+  closeSheet($('#sheet-edit'));
+  toast('已寫入記憶體核心');
+  await load();
+});
+$('#e-delete').addEventListener('click', async () => {
+  if (!confirm(`確定刪除「${draft.artist}」這筆紀錄？此動作無法復原。`)) return;
+  for (const id of draft.photos.concat(draft.removed)) await DB.del('photos', id);
+  await DB.del('shows', draft.id);
+  closeSheet($('#sheet-edit')); toast('紀錄已刪除'); await load();
+});
+
+/* ================= 備份 / 還原 ================= */
+const blobToDataURL = (b) => new Promise((r) => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); });
+$('#btn-export').addEventListener('click', async () => {
+  toast('打包中…');
+  const photos = await DB.all('photos');
+  const data = { app: 'neonlive', v: 1, exported: new Date().toISOString(), shows: await DB.all('shows'), photos: await Promise.all(photos.map(async (p) => ({ id: p.id, data: await blobToDataURL(p.blob) }))) };
+  const file = new File([JSON.stringify(data)], `neonlive-backup-${today()}.json`, { type: 'application/json' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'NEON//LIVE 備份' }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
+});
+$('#import-file').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (data.app !== 'neonlive') throw new Error('格式不符');
+    if (!confirm(`將匯入 ${data.shows.length} 筆紀錄（同 ID 會覆蓋），繼續？`)) return;
+    for (const p of data.photos || []) { const blob = await (await fetch(p.data)).blob(); await DB.put('photos', { id: p.id, blob }); }
+    for (const s of data.shows) await DB.put('shows', s);
+    toast(`匯入完成：${data.shows.length} 筆`); await load();
+  } catch (err) { toast('匯入失敗：' + err.message); }
+  e.target.value = '';
+});
+$('#btn-wipe').addEventListener('click', async () => {
+  if (!confirm('確定清除全部紀錄與照片？建議先匯出備份。')) return;
+  if (!confirm('最後確認：資料將無法復原。')) return;
+  await DB.clear('shows'); await DB.clear('photos'); urlCache.clear(); toast('已清除'); await load();
+});
+$('#btn-demo').addEventListener('click', async () => {
+  const y = new Date().getFullYear();
+  const plus = (d) => { const x = new Date(); x.setDate(x.getDate() + d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };
+  const demo = [
+    { artist: '五月天 Mayday', tour: '#5525 回到那一天 巡迴演唱會', date: `${y - 1}-12-31`, time: '19:30', venue: '台北大巨蛋', city: '台北', seat: '搖滾A2區', price: 4880, currency: 'TWD', rating: 5, companions: '阿明, 小雅', color: 'c', setlist: '擁抱\n知足\n倔強\n憨人\n派對動物\nENCORE\n人生海海\n倔強', notes: '跨年倒數的那一刻全場一起大合唱，手機燈海像整座城市都亮了。' },
+    { artist: 'YOASOBI', tour: 'ASIA TOUR 2024', date: `${y - 1}-06-22`, time: '18:00', venue: '台北小巨蛋', city: '台北', seat: '2樓 B區', price: 3800, currency: 'TWD', rating: 5, companions: '小雅', color: 'm', setlist: 'アイドル\n夜に駆ける\n群青\n怪物\n祝福\nENCORE\nアドベンチャー', notes: '' },
+    { artist: '告五人 Accusefive', tour: '我肯定在幾百年前就說過愛你', date: `${y - 2}-11-04`, time: '19:00', venue: '高雄巨蛋', city: '高雄', seat: '特A區', price: 3600, currency: 'TWD', rating: 4, companions: '', color: 'y', setlist: '愛人錯過\n帶我去找夜生活\n唯一', notes: '' },
+    { artist: 'Coldplay', tour: 'Music of the Spheres', date: `${y - 2}-11-12`, time: '19:00', venue: '高雄國家體育場', city: '高雄', seat: '搖滾區', price: 6800, currency: 'TWD', rating: 5, companions: '阿明', color: 'c', setlist: 'Higher Power\nAdventure of a Lifetime\nViva la Vida\nYellow\nA Sky Full of Stars\nENCORE\nFix You', notes: '發光手環同步變色超震撼。' },
+    { artist: '草東沒有派對', tour: '', date: plus(23), time: '20:00', venue: 'Legacy Taipei', city: '台北', seat: '站位 #0128', price: 1800, currency: 'TWD', rating: 0, companions: '', color: 'm', setlist: '', notes: '' },
+    { artist: 'Daft Punk', tour: '（如果他們復出）', date: plus(400), venue: '', city: '', price: null, currency: 'TWD', rating: 0, color: 'y', setlist: '', notes: '永遠的願望清單。', status: 'wish' }
+  ];
+  for (const d of demo) await DB.put('shows', { id: uid(), status: d.status || (d.date > today() ? 'going' : 'attended'), photos: [], companions: '', created: Date.now(), updated: Date.now(), ...d });
+  toast('已載入 6 筆範例'); await load(); go('home');
+});
+
+/* ================= 設定 ================= */
+const prefs = (() => { try { return JSON.parse(localStorage.getItem('neonlive-prefs')) || {}; } catch { return {}; } })();
+const P = { rain: prefs.rain ?? true, scan: prefs.scan ?? true, glitch: prefs.glitch ?? true };
+function applyPrefs() {
+  document.body.classList.toggle('no-scan', !P.scan);
+  document.body.classList.toggle('no-glitch', !P.glitch);
+  document.body.classList.toggle('calm', !P.rain);
+  $('#opt-rain').checked = P.rain; $('#opt-scan').checked = P.scan; $('#opt-glitch').checked = P.glitch;
+  try { localStorage.setItem('neonlive-prefs', JSON.stringify(P)); } catch {}
+}
+['rain', 'scan', 'glitch'].forEach((k) => $('#opt-' + k).addEventListener('change', (e) => { P[k] = e.target.checked; applyPrefs(); }));
+applyPrefs();
+
+async function storageInfo() {
+  let txt = '';
+  try { if (navigator.storage?.persist) { const p = await navigator.storage.persist(); txt += p ? '儲存：已鎖定（不易被系統清除）' : '儲存：一般'; } } catch {}
+  try { const e = await navigator.storage?.estimate?.(); if (e) txt += ` · 已用 ${(e.usage / 1048576).toFixed(1)} MB`; } catch {}
+  $('#storage-info').textContent = txt;
+}
+
+/* ================= 寫實賽博城市背景（程序化生成） ================= */
+const City = (() => {
+  const cv = $('#city'), ctx = cv.getContext('2d');
+  let W, H, dpr, scene, drops = [], raf, signs = [];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function build() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    scene = document.createElement('canvas'); scene.width = cv.width; scene.height = cv.height;
+    const g = scene.getContext('2d'); g.scale(dpr, dpr);
+    // 天空：霧霾與城市光污染
+    const sky = g.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#04050b'); sky.addColorStop(.45, '#0c0a1c'); sky.addColorStop(.72, '#2a0b2e'); sky.addColorStop(1, '#07060c');
+    g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    const haze = g.createRadialGradient(W * .7, H * .62, 10, W * .7, H * .62, W * .9);
+    haze.addColorStop(0, 'rgba(255,43,214,.28)'); haze.addColorStop(1, 'rgba(255,43,214,0)');
+    g.fillStyle = haze; g.fillRect(0, 0, W, H);
+    const haze2 = g.createRadialGradient(W * .15, H * .7, 10, W * .15, H * .7, W * .7);
+    haze2.addColorStop(0, 'rgba(0,240,255,.16)'); haze2.addColorStop(1, 'rgba(0,240,255,0)');
+    g.fillStyle = haze2; g.fillRect(0, 0, W, H);
+    // 三層建築（遠→近），遠景加大氣透視
+    signs = [];
+    const layers = [{ base: .62, hMin: .12, hMax: .32, col: [22, 18, 40], win: .12, a: .5 }, { base: .74, hMin: .18, hMax: .45, col: [12, 12, 24], win: .18, a: .75 }, { base: .9, hMin: .25, hMax: .62, col: [6, 7, 13], win: .22, a: 1 }];
+    layers.forEach((L, li) => {
+      let x = -20;
+      while (x < W + 20) {
+        const w = rnd(28, 90) * (li + 1) * .6 + 20, h = H * rnd(L.hMin, L.hMax), top = H * L.base - h;
+        g.fillStyle = `rgb(${L.col.join(',')})`; g.fillRect(x, top, w, H - top);
+        // 頂部天線
+        if (Math.random() < .3) { g.fillRect(x + w / 2, top - rnd(10, 40), 2, 40); g.fillStyle = 'rgba(255,59,92,.9)'; g.fillRect(x + w / 2 - 1, top - 40, 4, 3); }
+        // 窗戶燈光
+        const cw = 3 + li, ch = 4 + li;
+        for (let wy = top + 8; wy < H * L.base + 40; wy += ch + 5) for (let wx = x + 5; wx < x + w - cw - 3; wx += cw + 4) {
+          if (Math.random() < L.win) {
+            const r = Math.random();
+            g.fillStyle = r < .6 ? `rgba(255,${190 + rnd(0, 40) | 0},${120 + rnd(0, 50) | 0},${.25 + rnd(0, .45) * L.a})` : r < .85 ? `rgba(0,240,255,${.3 * L.a})` : `rgba(255,43,214,${.35 * L.a})`;
+            g.fillRect(wx, wy, cw, ch);
+          }
+        }
+        // 直立霓虹招牌
+        if (li > 0 && Math.random() < .22) signs.push({ x: x + rnd(4, w - 14), y: top + rnd(20, h * .4), h: rnd(40, 110), c: Math.random() < .5 ? '#ff2bd6' : Math.random() < .5 ? '#00f0ff' : '#fcee0a', ph: rnd(0, 6) });
+        x += w + rnd(2, 10);
+      }
+      // 每層之間的霧
+      const fog = g.createLinearGradient(0, H * L.base - H * .2, 0, H * L.base + 20);
+      fog.addColorStop(0, 'rgba(40,20,60,0)'); fog.addColorStop(1, `rgba(40,20,60,${.35 - li * .1})`);
+      g.fillStyle = fog; g.fillRect(0, 0, W, H);
+    });
+    // 濕地面反光
+    const wet = g.createLinearGradient(0, H * .9, 0, H);
+    wet.addColorStop(0, 'rgba(255,43,214,.12)'); wet.addColorStop(1, 'rgba(0,240,255,.05)');
+    g.fillStyle = wet; g.fillRect(0, H * .9, W, H * .1);
+    // 內容可讀性遮罩
+    g.fillStyle = 'rgba(3,4,8,.42)'; g.fillRect(0, 0, W, H);
+    drops = Array.from({ length: Math.round(W * H / 6500) }, () => ({ x: rnd(0, W), y: rnd(0, H), l: rnd(10, 26), v: rnd(9, 17), a: rnd(.08, .28) }));
+  }
+  function drawSigns(t) {
+    for (const s of signs) {
+      const flick = Math.sin(t / 900 + s.ph) > -.92 || Math.random() > .5;
+      ctx.globalAlpha = flick ? .85 : .25;
+      ctx.shadowColor = s.c; ctx.shadowBlur = 14; ctx.fillStyle = s.c;
+      ctx.fillRect(s.x, s.y, 7, s.h);
+      ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0,0,0,.55)';
+      for (let i = 6; i < s.h - 4; i += 9) ctx.fillRect(s.x + 1, s.y + i, 5, 2);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function frame(t) {
+    if (!scene.width || !scene.height) { build(); if (!scene.width || !scene.height) return; }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(scene, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawSigns(t || 0);
+    if (P.rain) {
+      ctx.strokeStyle = 'rgba(180,220,255,1)'; ctx.lineWidth = 1;
+      for (const d of drops) {
+        ctx.globalAlpha = d.a; ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * .18, d.y + d.l); ctx.stroke();
+        d.y += d.v; d.x -= d.v * .18; if (d.y > H) { d.y = -d.l; d.x = rnd(0, W + 40); }
+      }
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(frame);
+    }
+  }
+  const motionOK = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function start() { cancelAnimationFrame(raf); if (motionOK && P.rain && !document.hidden) raf = requestAnimationFrame(frame); else frame(0); }
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { build(); start(); }, 200); });
+  document.addEventListener('visibilitychange', start);
+  $('#opt-rain').addEventListener('change', start);
+  build(); start();
+})();
+
+/* ================= 啟動 ================= */
+const clock = () => { const d = new Date(); $('#clock').textContent = d.toTimeString().slice(0, 5); };
+clock(); setInterval(clock, 15000);
+load().then(storageInfo);
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>05 酸性狂歡 原型</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;700&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+.app{--lime:#d4ff00;--or:#ff3d00;color:#fff;font-family:Archivo,-apple-system,"PingFang TC",sans-serif;background:#0a0a0a}
+.blk{font-family:"Archivo Black",sans-serif}
+.hv{font-family:-apple-system,"PingFang TC","Heiti TC",sans-serif;font-weight:900}
+.screen[data-screen=feed]{padding:0;overflow:hidden}
+.feed{position:absolute;inset:0;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
+.feed::-webkit-scrollbar{display:none}
+.slide{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden}
+.slide .dots{position:absolute;inset:0;background:radial-gradient(circle,var(--tone) 1.4px,transparent 1.6px) 0 0/9px 9px;-webkit-mask:radial-gradient(70% 55% at 65% 35%,#000,transparent 80%);mask:radial-gradient(70% 55% at 65% 35%,#000,transparent 80%);opacity:.85}
+.slide .band{position:absolute;left:-40px;top:36%;width:560px;height:60px;background:var(--band);transform:rotate(-8deg);display:flex;align-items:center;white-space:nowrap;font:24px "Archivo Black",sans-serif;color:#0a0a0a;animation:mq 12s linear infinite}
+@keyframes mq{to{transform:rotate(-8deg) translateX(-120px)}}
+.slide .info{position:absolute;left:16px;right:84px;bottom:calc(130px + env(safe-area-inset-bottom))}
+.date{display:inline-block;padding:6px 10px;background:var(--lime);color:#0a0a0a;font:14px "Archivo Black",sans-serif;transform:rotate(-3deg)}
+.slide h2{margin:12px 0 0;font-size:68px;line-height:.92;letter-spacing:-.04em;word-break:break-all}
+.slide .en{font:32px/1 "Archivo Black",sans-serif;color:var(--lime);letter-spacing:-.02em}
+.prog{position:absolute;top:max(env(safe-area-inset-top),44px);left:14px;right:14px;z-index:10;display:flex;gap:4px}
+.prog i{flex:1;height:3px;background:rgba(255,255,255,.3)}
+.prog i.on{background:#fff}
+.bar{position:absolute;top:calc(max(env(safe-area-inset-top),44px) + 12px);left:14px;right:14px;z-index:10;display:flex;justify-content:space-between;align-items:center}
+.plus{width:52px;height:52px;border-radius:26px;display:grid;place-items:center;background:var(--lime);color:#0a0a0a;transform:rotate(-10deg)}
+.plus:active{transform:rotate(10deg) scale(.92)}
+.rail{position:absolute;right:12px;bottom:calc(140px + env(safe-area-inset-bottom));z-index:10;display:flex;flex-direction:column;gap:14px;align-items:center}
+.rail button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700}
+.rail span{width:52px;height:52px;border-radius:26px;display:grid;place-items:center;border:2px solid #fff}
+.rail .w{background:#fff;color:#0a0a0a;font:18px "Archivo Black",sans-serif;border:0}
+.rail button:active span{background:var(--lime);color:#0a0a0a;border-color:var(--lime)}
+.drawer{position:absolute;left:0;right:0;bottom:0;z-index:10;height:calc(104px + env(safe-area-inset-bottom));padding:16px 16px env(safe-area-inset-bottom);background:var(--or);color:#0a0a0a;display:flex;justify-content:space-between;align-items:center;text-align:left;width:100%}
+.screen[data-screen=all]{background:var(--lime);color:#0a0a0a;padding:max(env(safe-area-inset-top),44px) 16px 40px}
+.posters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.poster{min-height:180px;padding:12px;background:#0a0a0a;color:#fff;display:flex;flex-direction:column;justify-content:space-between;text-align:left;position:relative;overflow:hidden}
+.poster:nth-child(3n+2){background:var(--or);color:#0a0a0a}
+.poster:nth-child(3n){background:#fff;color:#0a0a0a;border:3px solid #0a0a0a}
+.poster b{font-size:30px;line-height:.95;letter-spacing:-.03em;word-break:break-all}
+.pill{min-height:48px;padding:0 20px;border-radius:24px;border:3px solid currentColor;font:15px "Archivo Black",sans-serif}
+.round{width:48px;height:48px;border-radius:24px;display:grid;place-items:center;background:#0a0a0a;color:var(--lime)}
+.tally{display:grid;grid-template-columns:repeat(3,1fr);border-top:3px solid #0a0a0a;border-bottom:3px solid #0a0a0a;margin-top:14px;padding:10px 0;font-weight:700;font-size:13px}
+.screen[data-screen=detail]{background:var(--lime);color:#0a0a0a;padding:max(env(safe-area-inset-top),44px) 0 40px}
+.sl{margin-top:14px;background:#0a0a0a;color:#fff;padding:16px 16px 60px;transform:rotate(-2deg);transform-origin:left top;width:110%}
+.sl ol{list-style:none;margin:0;padding:0;font-size:30px;line-height:1.14;letter-spacing:-.02em}
+.sl ol span{font:13px "Archivo Black",sans-serif;color:var(--lime);vertical-align:top;margin-right:8px}
+.sl .enc{display:inline-block;margin:6px 0;padding:2px 10px;background:var(--or);color:#0a0a0a;font:18px "Archivo Black",sans-serif}
+.sl .e{color:#ff6a3d}
+.sheet .panel{background:var(--lime);color:#0a0a0a;padding:16px;border-top:6px solid #0a0a0a}
+.f{display:flex;flex-direction:column;gap:10px}
+.f label{display:flex;flex-direction:column;gap:4px;font:13px "Archivo Black",sans-serif}
+.f input,.f textarea{min-height:50px;padding:10px 12px;border:3px solid #0a0a0a;background:#fff;color:#0a0a0a;border-radius:0;font-family:Archivo,-apple-system,"PingFang TC",sans-serif;font-weight:700}
+.f input:focus,.f textarea:focus{outline:0;background:#fff8d0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.toast{background:var(--lime);color:#0a0a0a;font:15px "Archivo Black",sans-serif;bottom:140px;transform:rotate(-2deg)}
+.toast.on{transform:rotate(-2deg)}
+</style>
+</head>
+<body>
+<a class="proto-home" href="index.html">← 全部原型</a>
+<div class="app">
+  <main class="screen" data-screen="feed">
+    <div class="feed" id="feed"></div>
+    <div class="prog" id="prog" aria-hidden="true"></div>
+    <div class="bar"><span class="blk" style="font-size:15px">GIG/ROLL <span style="color:var(--lime)" id="num"></span></span><button class="plus" data-sheet="add" aria-label="新增演唱會"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
+    <div class="rail">
+      <button id="rRate"><span class="w" id="rv">5.0</span>評分</button>
+      <button id="rSet"><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><em style="font-style:normal" id="rs">歌單</em></button>
+      <button data-toast="原型：照片牆"><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/></svg></span>照片</button>
+      <button data-toast="已產生分享卡！"><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12v7h16v-7M12 3v12M7 8l5-5 5 5"/></svg></span>分享</button>
+    </div>
+    <button class="drawer" data-go="all"><span><span class="blk" style="display:block;font-size:22px;line-height:1" id="allc"></span><span style="font-size:13px;font-weight:700">上滑看下一場 · 點這裡開啟全部</span></span><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+  </main>
+
+  <main class="screen" data-screen="all">
+    <div style="display:flex;justify-content:space-between;align-items:center"><button class="round" data-go="feed" aria-label="回到動態"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="pill" data-sheet="add">+ NEW GIG</button></div>
+    <h1 class="blk" style="margin:16px 0 0;font-size:56px;line-height:.9;letter-spacing:-.03em">ALL<br>GIGS<span style="color:var(--or)" id="allnum"></span></h1>
+    <div class="tally" id="tally"></div>
+    <div class="posters" id="posters"></div>
+  </main>
+
+  <main class="screen" data-screen="detail" id="detail"></main>
+
+  <div class="sheet" id="add" role="dialog" aria-modal="true" aria-label="新增演唱會">
+    <div class="scrim" data-close></div>
+    <div class="panel">
+      <form class="f" data-add>
+        <div style="display:flex;justify-content:space-between;align-items:center"><button type="button" class="pill" data-close>NOPE</button><button class="pill" style="background:#0a0a0a;color:var(--lime);border-color:#0a0a0a">DROP IT!</button></div>
+        <label>WHO? *<input name="artist" placeholder="藝人"></label>
+        <div class="two"><label>WHEN? *<input name="date" type="date"></label><label>WHERE?<input name="venue" placeholder="場館"></label></div>
+        <div class="two"><label>SEAT<input name="seat"></label><label>SCORE 0-5<input name="rating" type="number" min="0" max="5" inputmode="numeric"></label></div>
+        <label>SETLIST（ENCORE 分隔）<textarea name="setlistText" rows="4"></textarea></label>
+      </form>
+    </div>
+  </div>
+  <div class="toast" role="status" aria-live="polite"></div>
+</div>
+<script src="shared.js"></script>
+<script>
+const { esc } = P;
+const TONE = [['#d4ff00', '#ff3d00'], ['#ff3d00', '#d4ff00'], ['#ffffff', '#d4ff00']];
+let items = [], idx = 0;
+const split = (a) => { const m = a.match(/^(\S+)\s+(.+)$/); return /[一-鿿]/.test(a) && m ? [m[1], m[2]] : [a, '']; };
+function render() {
+  items = P.list().filter((s) => s.status !== 'wish');
+  document.getElementById('feed').innerHTML = items.map((s, i) => { const [zh, en] = split(s.artist); const [tone, band] = TONE[i % 3]; const p = P.parts(s.date); const word = (s.venue || 'LIVE').toUpperCase();
+    return `<section class="slide" style="--tone:${tone};--band:${band}" aria-label="${esc(s.artist)}"><div class="dots"></div>
+      <div class="band" aria-hidden="true">${s.status === 'going' ? 'COMING SOON' : 'SOLD OUT'} · ${esc(word)} · ${s.date.replace(/-/g, '.')} · ${s.status === 'going' ? 'COMING SOON' : 'SOLD OUT'} · ${esc(word)}</div>
+      <div class="info"><span class="date">${p.d} ${p.mon} ${p.y}</span><h2 class="hv">${esc(zh)}</h2>${en ? `<div class="en">${esc(en.toUpperCase())}</div>` : ''}
+      <div style="margin-top:10px;font-weight:700">${esc(s.venue)}${s.seat ? ' · ' + esc(s.seat) : ''}</div><div style="font-size:14px;color:#d0d0d0">${esc(s.tour)}</div></div></section>`; }).join('');
+  document.getElementById('allc').textContent = `ALL ${P.shows.length} GIGS`;
+  document.getElementById('allnum').textContent = '.' + P.shows.length;
+  const st = P.stats();
+  document.getElementById('tally').innerHTML = `<span>${st.total} SHOWS</span><span style="text-align:center">${st.songs} SONGS</span><span style="text-align:right">AVG ${st.avg}</span>`;
+  document.getElementById('posters').innerHTML = P.list().map((s) => { const [zh] = split(s.artist); return `<button class="poster" data-open="${s.id}"><span class="blk" style="font-size:12px">${s.date.replace(/-/g, '.')}</span><b class="hv">${esc(zh)}</b><span style="font-size:12px;font-weight:700">${esc(s.venue || P.STATUS[s.status])}</span></button>`; }).join('');
+  sync();
+}
+function sync() {
+  const feed = document.getElementById('feed');
+  idx = Math.round(feed.scrollTop / (feed.clientHeight || 1));
+  const s = items[idx]; if (!s) return;
+  document.getElementById('prog').innerHTML = items.map((_, i) => `<i class="${i <= idx ? 'on' : ''}"></i>`).join('');
+  document.getElementById('num').textContent = '#' + String(idx + 1).padStart(2, '0');
+  document.getElementById('rv').textContent = s.rating ? s.rating.toFixed(1) : 'NEW';
+  document.getElementById('rs').textContent = P.songs(s) ? P.songs(s) + ' 首' : '歌單';
+}
+document.getElementById('feed').addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
+document.getElementById('rRate').addEventListener('click', () => { const s = items[idx]; P.toast(s.rating ? `${s.artist}：${'★'.repeat(s.rating)}` : '還沒評分，看完再說！'); });
+document.getElementById('rSet').addEventListener('click', () => { detail(items[idx].id); P.go('detail'); });
+function detail(id) {
+  const s = P.get(id); const [zh, en] = split(s.artist); let n = 0;
+  document.getElementById('detail').innerHTML = `
+    <div style="padding:0 16px;display:flex;justify-content:space-between;align-items:center"><button class="round" data-back aria-label="返回"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="pill" data-toast="原型：編輯畫面">EDIT</button></div>
+    <div style="padding:14px 16px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:10px"><h1 class="hv" style="margin:0;font-size:50px;line-height:.95;letter-spacing:-.04em;word-break:break-all">${esc(zh)}${en ? `<br><span class="blk" style="font-size:28px;font-weight:400">${esc(en.toUpperCase())}</span>` : ''}</h1>
+      <div class="blk" style="text-align:right;line-height:.9;flex:none"><span style="font-size:56px">${s.rating || '?'}</span><span style="font-size:22px">/5</span></div></div>
+    <div class="tally" style="margin:10px 16px 0"><span>${s.date.replace(/-/g, '.')}</span><span style="text-align:center">${esc(s.venue || '—')}</span><span style="text-align:right">${s.price ? 'TWD ' + s.price.toLocaleString() : '—'}</span></div>
+    <section class="sl"><div class="blk" style="color:var(--lime);font-size:14px;letter-spacing:.1em;margin-bottom:8px">SETLIST ——— ${P.songs(s)} TRACKS</div>
+      ${P.songs(s) ? `<ol class="hv">${s.setlist.map((t) => `<li><span>${P.pad(++n)}</span>${esc(t)}</li>`).join('')}${s.encore.length ? `<li class="enc">ENCORE!!</li>` + s.encore.map((t) => `<li class="e"><span>${P.pad(++n)}</span>${esc(t)}</li>`).join('') : ''}</ol>` : '<p class="hv" style="font-size:24px">還沒有歌單</p>'}
+      ${s.notes ? `<p style="font-weight:700;margin-top:18px;width:85%">${esc(s.notes)}</p>` : ''}</section>`;
+}
+P.init({ render, detail, home: 'feed', onGo: (n) => { if (n === 'feed') requestAnimationFrame(sync); } });
+</script>
+</body>
+</html>

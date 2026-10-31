@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>04 軌道白 原型</title>
+<meta name="theme-color" content="#eceef0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+body{background:#d5d8dd}
+.app{--ink:#0e0f12;--mut:#5b6170;--or:#ff4f00;--ort:#c23a00;--rule:#e3e5e8;color:var(--ink);font-family:"Space Grotesk",-apple-system,"PingFang TC",sans-serif;background:#eceef0}
+.screen{padding:max(env(safe-area-inset-top),48px) 0 40px}
+.mono{font-family:"Space Mono",monospace}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;padding:0 20px}
+.k{font:11px "Space Mono",monospace;letter-spacing:.12em;color:var(--mut)}
+h1{margin:2px 0 0;font-size:34px;letter-spacing:-.02em}
+.rb{width:44px;height:44px;border-radius:22px;display:grid;place-items:center;border:1px solid #c9ccd2;background:#fff}
+.seg{margin:14px 20px 0;display:grid;grid-template-columns:repeat(3,1fr);padding:3px;border-radius:12px;background:#dfe2e6}
+.seg button{min-height:36px;border-radius:9px;font-size:14px;color:var(--mut)}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+#orbit{display:block;width:100%;height:auto;max-height:46vh;margin-top:4px}
+#orbit .dot{cursor:pointer}
+#orbit .dot:hover circle,#orbit .dot:focus circle{stroke:var(--or);stroke-width:3}
+#orbit .dot:focus{outline:none}
+.tl{padding:10px 20px 320px}
+.tl ol{list-style:none;margin:0;padding:0 0 0 18px;border-left:2px solid var(--ink)}
+.tl li button{position:relative;display:block;width:100%;text-align:left;padding:10px 0 10px 14px;min-height:56px}
+.tl li button::before{content:"";position:absolute;left:-25px;top:18px;width:12px;height:12px;border-radius:6px;background:#eceef0;border:2px solid var(--ink);box-sizing:border-box}
+.tl li.or button::before{background:var(--or);border-color:var(--or)}
+.tl .yr{font:700 13px "Space Mono",monospace;color:var(--ort);margin:14px 0 2px -18px}
+.dock{position:absolute;left:0;right:0;bottom:0;z-index:20;height:300px;border-radius:26px 26px 0 0;background:#fff;box-shadow:0 -10px 30px rgba(14,15,18,.1);padding:8px 20px 0;transition:height .3s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.dock.max{height:78%}
+.grab{width:100%;min-height:28px;display:grid;place-items:center}
+.grab i{width:40px;height:5px;border-radius:3px;background:#c9ccd2}
+.yrs{display:flex;gap:6px;overflow-x:auto;padding:6px 0 10px}
+.yrs button{min-height:36px;padding:0 14px;border-radius:18px;border:1px solid #c9ccd2;font:700 13px "Space Mono",monospace;flex:none}
+.yrs button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.lst{overflow-y:auto;flex:1;padding-bottom:env(safe-area-inset-bottom)}
+.it{width:100%;display:grid;grid-template-columns:52px minmax(0,1fr) 14px;gap:12px;align-items:center;min-height:62px;border-bottom:1px solid var(--rule);text-align:left}
+.it .d{font:12px/1.2 "Space Mono",monospace}
+.it .d b{font-size:20px}
+.it .n{font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .v{font-size:13px;color:var(--mut)}
+.it i{width:10px;height:10px;border-radius:5px;background:var(--ink)}
+.it i.or{background:var(--or)}
+.fab{position:absolute;right:20px;top:-30px;width:60px;height:60px;border-radius:30px;display:grid;place-items:center;background:var(--or);color:#fff;box-shadow:0 10px 24px rgba(255,79,0,.4)}
+.mhead{background:var(--or);padding:max(env(safe-area-inset-top),48px) 20px 18px;margin-top:calc(-1 * max(env(safe-area-inset-top),48px))}
+.mhead .bar{display:flex;justify-content:space-between;align-items:center}
+.cb{width:44px;height:44px;border-radius:22px;display:grid;place-items:center;background:rgba(255,255,255,.3)}
+.eb{min-height:44px;padding:0 16px;border-radius:22px;background:var(--ink);color:#fff;font-weight:700}
+.spec{display:grid;grid-template-columns:repeat(3,1fr);background:#fff;border-bottom:1px solid #d5d8dd;margin:0}
+.spec div{padding:12px 14px;border-right:1px solid var(--rule);border-top:1px solid var(--rule)}
+.spec dt{font:10px "Space Mono",monospace;color:var(--mut)}
+.spec dd{margin:2px 0 0;font-weight:700}
+.seq{padding:18px 20px}
+.seq ol{list-style:none;margin:0;padding:0 0 0 18px;border-left:2px solid var(--ink)}
+.seq li{position:relative;padding:7px 0 7px 14px}
+.seq li::before{content:"";position:absolute;left:-25px;top:13px;width:12px;height:12px;border-radius:6px;background:#eceef0;border:2px solid var(--ink);box-sizing:border-box}
+.seq li.x::before{background:var(--or);border-color:var(--or)}
+.seq li.h{font:11px "Space Mono",monospace;letter-spacing:.12em;color:var(--ort);padding-top:12px}
+.seq li.h::before{display:none}
+.seq small{font:11px "Space Mono",monospace;color:var(--mut);margin-right:10px}
+.sheet .panel{background:#fff;border-radius:26px 26px 0 0;padding:10px 20px}
+.f{display:flex;flex-direction:column;gap:12px}
+.f label{display:flex;flex-direction:column;gap:4px;font:11px "Space Mono",monospace;color:var(--mut);letter-spacing:.08em}
+.f input,.f textarea{min-height:46px;padding:10px 12px;border-radius:10px;border:1px solid #c9ccd2;background:#f6f7f8;font-family:"Space Grotesk",-apple-system,"PingFang TC",sans-serif;letter-spacing:0}
+.f input:focus,.f textarea:focus{outline:2px solid var(--or);border-color:transparent}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.toast{background:var(--ink);color:#fff;border-radius:12px;font-size:14px}
+</style>
+</head>
+<body>
+<a class="proto-home" href="index.html">← 全部原型</a>
+<div class="app">
+  <main class="screen" data-screen="home">
+    <div class="hd"><div><div class="k">LOG / <span id="vname">ORBIT VIEW</span></div><h1>軌道日誌</h1></div><button class="rb" data-go="sys" aria-label="設定"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e0f12" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button></div>
+    <div class="seg" id="seg" role="group" aria-label="檢視"><button data-v="orbit" aria-pressed="true">軌道</button><button data-v="tl" aria-pressed="false">時間軸</button><button data-v="map" aria-pressed="false">地圖</button></div>
+    <div id="vOrbit"><svg id="orbit" viewBox="0 0 390 370" role="img" aria-label="依年份排列的演出軌道"></svg></div>
+    <div id="vTl" class="tl" hidden></div>
+    <section class="dock" id="dock" aria-label="場次清單">
+      <button class="grab" id="grab" aria-label="展開或收合清單"><i></i></button>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin:0;font-size:20px" id="dtitle"></h2><span class="mono" style="font-size:12px;color:var(--ort)" id="tm"></span></div>
+      <div class="yrs" id="yrs" role="group" aria-label="年份"></div>
+      <div class="lst" id="lst"></div>
+      <button class="fab" data-sheet="add" aria-label="新增演唱會"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    </section>
+  </main>
+
+  <main class="screen" data-screen="sys">
+    <div class="hd"><div><div class="k">SYSTEM</div><h1>設定</h1></div><button class="rb" data-go="home" aria-label="關閉"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e0f12" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div style="margin:20px;background:#fff;border-radius:16px;padding:4px 16px" id="sys"></div>
+  </main>
+
+  <main class="screen" data-screen="detail" id="detail"></main>
+
+  <div class="sheet" id="add" role="dialog" aria-modal="true" aria-label="新增演唱會">
+    <div class="scrim" data-close></div>
+    <div class="panel">
+      <div class="grab"><i></i></div>
+      <form class="f" data-add>
+        <div style="display:flex;justify-content:space-between;align-items:center"><button type="button" data-close style="min-height:44px;color:var(--mut)">取消</button><b>NEW MISSION</b><button class="eb" style="background:var(--or)">儲存</button></div>
+        <label>ARTIST *<input name="artist"></label>
+        <label>MISSION / TOUR<input name="tour"></label>
+        <div class="two"><label>DATE *<input name="date" type="date"></label><label>T-ZERO<input name="time" type="time"></label></div>
+        <div class="two"><label>LOCATION<input name="venue"></label><label>COST<input name="price" type="number" inputmode="numeric"></label></div>
+        <label>RATING 0–5<input name="rating" type="number" min="0" max="5" inputmode="numeric"></label>
+        <label>SEQUENCE（一行一首，安可前輸入 ENCORE）<textarea name="setlistText" rows="4"></textarea></label>
+      </form>
+    </div>
+  </div>
+  <div class="toast" role="status" aria-live="polite"></div>
+</div>
+<script src="shared.js"></script>
+<script>
+const { esc } = P;
+let year = null;
+function orbit() {
+  const all = P.list().filter((s) => s.status !== 'wish');
+  const years = [...new Set(all.map((s) => s.date.slice(0, 4)))].sort().reverse();
+  const cx = 195, cy = 185, r0 = 70, gap = Math.min(36, 105 / Math.max(1, years.length - 1));
+  let g = '';
+  years.forEach((y, i) => {
+    const r = r0 + i * gap;
+    g += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${y === year ? '#0e0f12' : '#c9ccd2'}" stroke-width="${y === year ? 1.5 : 1}" ${y === year ? 'stroke-dasharray="2 5"' : ''}/>`;
+    g += `<text x="${cx}" y="${cy - r - 4}" text-anchor="middle" font-family="Space Mono" font-size="10" fill="#5b6170">${y}</text>`;
+  });
+  all.forEach((s) => {
+    const i = years.indexOf(s.date.slice(0, 4)); const r = r0 + i * gap;
+    const ang = ((+s.date.slice(5, 7) - 1) / 12 + (+s.date.slice(8, 10)) / 372) * Math.PI * 2 - Math.PI / 2 + 0.25;
+    const x = cx + r * Math.cos(ang), y = cy + r * Math.sin(ang);
+    const hot = s.status === 'going' || s.rating === 5;
+    g += `<g class="dot" data-open="${s.id}" tabindex="0" role="button" aria-label="${esc(s.artist)} ${s.date}"><circle cx="${x}" cy="${y}" r="16" fill="transparent"/><circle cx="${x}" cy="${y}" r="${hot ? 8 : 6}" fill="${s.status === 'going' ? '#ff4f00' : hot ? '#ff4f00' : '#0e0f12'}" stroke="#eceef0" stroke-width="2"/>${s.status === 'going' ? `<circle cx="${x}" cy="${y}" r="14" fill="none" stroke="#ff4f00" stroke-width="1.5"/>` : ''}</g>`;
+  });
+  const st = P.stats();
+  g += `<circle cx="${cx}" cy="${cy}" r="44" fill="#0e0f12"/><text x="${cx}" y="${cy + 6}" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="28" fill="#fff">${st.total}</text><text x="${cx}" y="${cy + 24}" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#c9ccd2">SHOWS</text>`;
+  document.getElementById('orbit').innerHTML = g;
+  return years;
+}
+function render() {
+  const years = orbit();
+  if (!year || !years.includes(year)) year = years.find((y) => y <= P.today.slice(0, 4)) || years[0];
+  document.getElementById('yrs').innerHTML = years.map((y) => `<button data-y="${y}" aria-pressed="${y === year}">${y}</button>`).join('');
+  const list = P.list().filter((s) => s.date.startsWith(year) && s.status !== 'wish');
+  document.getElementById('dtitle').textContent = `${year} · ${list.length} 場`;
+  const n = P.next(); document.getElementById('tm').textContent = n ? `下一場 T−${+P.countdown(n).d} 天` : '';
+  document.getElementById('lst').innerHTML = list.map((s) => { const p = P.parts(s.date); return `<button class="it" data-open="${s.id}"><span class="d"><b>${p.d}</b><br>${p.mon}</span><span><span class="n">${esc(s.artist)}</span><span class="v">${esc(s.venue || '—')}</span></span><i class="${s.status === 'going' || s.rating === 5 ? 'or' : ''}"></i></button>`; }).join('');
+  let tl = '<ol>', cur = '';
+  for (const s of P.list()) { const y = s.date.slice(0, 4); if (y !== cur) { cur = y; tl += `<li class="yr">${y}</li>`; } tl += `<li class="${s.status !== 'attended' ? 'or' : ''}"><button data-open="${s.id}"><b>${esc(s.artist)}</b><br><span class="mono" style="font-size:12px;color:var(--mut)">${s.date} · ${esc(s.venue || P.STATUS[s.status])}</span></button></li>`; }
+  document.getElementById('vTl').innerHTML = tl + '</ol>';
+  const st = P.stats();
+  document.getElementById('sys').innerHTML = [['總場次', st.total], ['平均評分', st.avg], ['現場聽過的歌', st.songs], ['票券花費', 'TWD ' + st.spend.toLocaleString()], ['資料', '原型（不會存檔）']].map(([k, v]) => `<div style="display:flex;justify-content:space-between;min-height:52px;align-items:center;border-bottom:1px solid var(--rule)"><span>${k}</span><b class="mono">${v}</b></div>`).join('');
+}
+document.getElementById('yrs').addEventListener('click', (e) => { const b = e.target.closest('[data-y]'); if (b) { year = b.dataset.y; render(); } });
+document.getElementById('grab').addEventListener('click', () => document.getElementById('dock').classList.toggle('max'));
+document.getElementById('orbit').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset.open) e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
+document.getElementById('seg').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-v]'); if (!b) return;
+  if (b.dataset.v === 'map') { P.toast('原型：地圖檢視尚未實作'); return; }
+  document.querySelectorAll('#seg button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  const tl = b.dataset.v === 'tl';
+  document.getElementById('vOrbit').hidden = tl; document.getElementById('vTl').hidden = !tl;
+  document.getElementById('dock').style.display = tl ? 'none' : '';
+  document.getElementById('vname').textContent = tl ? 'TIMELINE VIEW' : 'ORBIT VIEW';
+});
+function detail(id) {
+  const s = P.get(id); let n = 0;
+  document.getElementById('detail').innerHTML = `
+    <div class="mhead"><div class="bar"><button class="cb" data-back aria-label="返回"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e0f12" stroke-width="2" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><span class="k" style="color:var(--ink)">MISSION LOG ${String(P.shows.indexOf(s) + 1).padStart(4, '0')}</span><button class="eb" data-toast="原型：編輯畫面">編輯</button></div>
+      <h2 style="margin:18px 0 0;font-size:34px;line-height:1.05;letter-spacing:-.02em">${esc(s.artist)}</h2><div>${esc(s.tour)}</div></div>
+    <dl class="spec"><div><dt>DATE</dt><dd>${s.date.slice(2).replace(/-/g, '.')}</dd></div><div><dt>T-ZERO</dt><dd>${s.time || '—'}</dd></div><div style="border-right:0"><dt>RATING</dt><dd>${s.rating ? s.rating + '.0' : '—'}</dd></div>
+      <div style="grid-column:span 2"><dt>LOCATION</dt><dd>${esc(s.venue || '—')}${s.seat ? ' · ' + esc(s.seat) : ''}</dd></div><div style="border-right:0"><dt>COST</dt><dd>${s.price ? s.price.toLocaleString() : '—'}</dd></div></dl>
+    <div class="seq"><div class="k" style="margin-bottom:10px">SEQUENCE · ${P.songs(s)} TRACKS</div>${P.songs(s) ? `<ol>${s.setlist.map((t) => `<li><small>${P.pad(++n)}</small>${esc(t)}</li>`).join('')}${s.encore.length ? `<li class="h">EXTENDED ORBIT · 安可</li>` + s.encore.map((t) => `<li class="x"><small>${P.pad(++n)}</small>${esc(t)}</li>`).join('') : ''}</ol>` : '<p style="color:var(--mut)">尚無歌單</p>'}
+    ${s.notes ? `<p style="margin-top:18px;padding:14px;background:#fff;border-radius:12px">${esc(s.notes)}</p>` : ''}</div>`;
+}
+P.init({ render, detail });
+</script>
+</body>
+</html>

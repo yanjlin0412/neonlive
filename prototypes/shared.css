@@ -1,0 +1,30 @@
+/* 6 款原型共用：手機外框、畫面切換、Sheet、提示 */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{display:flex;justify-content:center;align-items:center;background:#0c0c0e;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input,textarea,select{font:inherit;font-size:16px;color:inherit}
+:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.app{position:relative;width:100%;max-width:430px;height:100vh;height:100dvh;overflow:hidden}
+@media (min-width:600px) and (min-height:900px){
+  .app{height:880px;border-radius:44px;box-shadow:0 0 0 10px #1d1d21,0 0 0 11px #333,0 40px 90px rgba(0,0,0,.7)}
+}
+.screen{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;padding-top:max(env(safe-area-inset-top),24px)}
+.screen.on{display:block;animation:pin .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes pin{from{opacity:0;transform:translateY(8px)}}
+
+.sheet{position:absolute;inset:0;z-index:50;display:none}
+.sheet.on{display:block}
+.sheet>.scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);animation:fd .2s}
+.sheet>.panel{position:absolute;left:0;right:0;bottom:0;max-height:92%;overflow-y:auto;padding-bottom:max(env(safe-area-inset-bottom),20px);animation:up .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(100%)}}
+@keyframes fd{from{opacity:0}}
+
+.toast{position:absolute;left:16px;right:16px;bottom:120px;z-index:90;padding:12px 14px;opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;text-align:center}
+.toast.on{opacity:1;transform:none}
+
+.proto-home{position:fixed;top:16px;left:16px;z-index:100;padding:10px 14px;border-radius:10px;background:#1d1d21;color:#ddd;font:500 13px -apple-system,"PingFang TC",sans-serif;text-decoration:none;border:1px solid #333}
+@media (max-width:599px){.proto-home{display:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

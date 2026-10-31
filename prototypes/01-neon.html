@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>01 霓虹雨夜 原型</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+.app{--c:#00f0ff;--m:#ff2bd6;--y:#fcee0a;--g:#3dffa8;--mut:#a3b0c6;--line:rgba(160,180,220,.16);
+  color:#e9f1ff;font-family:-apple-system,"PingFang TC",sans-serif;
+  background:radial-gradient(70% 40% at 80% 70%,rgba(255,43,214,.3),transparent 70%),radial-gradient(60% 40% at 10% 78%,rgba(0,240,255,.18),transparent 70%),linear-gradient(180deg,#04050b,#0c0a1c 48%,#2a0b2e 76%,#07060c)}
+.city{position:absolute;left:0;right:0;bottom:70px;height:280px;opacity:.85;pointer-events:none}
+.fx{position:absolute;inset:0;pointer-events:none;z-index:1;background:repeating-linear-gradient(105deg,transparent 0 22px,rgba(180,220,255,.06) 22px 23px),repeating-linear-gradient(180deg,transparent 0 2px,rgba(0,0,0,.18) 2px 3px)}
+.screen{z-index:2;padding:max(env(safe-area-inset-top),48px) 16px 110px}
+.mono{font-family:"JetBrains Mono",monospace}
+.disp{font-family:"Chakra Petch",-apple-system,"PingFang TC",sans-serif}
+.kick{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;color:var(--c)}
+h1{margin:4px 0 16px;font-family:"Chakra Petch",-apple-system,"PingFang TC",sans-serif;font-size:32px;text-shadow:-2px 0 rgba(255,43,214,.55),2px 0 rgba(0,240,255,.45)}
+h2{font-family:"Chakra Petch",sans-serif;font-size:13px;letter-spacing:.2em;color:var(--mut);margin:22px 0 10px}
+.panel{background:rgba(11,14,24,.86);border:1px solid var(--line);padding:14px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.next .lbl{font-size:11px;letter-spacing:.2em;color:#ff5ce0}
+.next .ar{font-size:24px;font-weight:700;margin:4px 0 2px}
+.cd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.cd div{border:1px solid rgba(0,240,255,.35);text-align:center;padding:6px 0}
+.cd b{display:block;font:600 24px "JetBrains Mono",monospace;color:var(--c);text-shadow:0 0 10px rgba(0,240,255,.6)}
+.cd span{font-size:11px;color:var(--mut)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat b{display:block;font:600 28px "JetBrains Mono",monospace}
+.stat span{font-size:12px;color:var(--mut)}
+.ticket{display:flex;width:100%;min-height:116px;text-align:left;margin-bottom:12px;position:relative;background:linear-gradient(160deg,#161c2d,#0a0d16 70%);border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.ticket:active{transform:scale(.98)}
+.ticket .mn{flex:1;min-width:0;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.ticket .st{font:10px "JetBrains Mono",monospace;letter-spacing:.18em}
+.ticket .ar{font:700 19px "Chakra Petch",-apple-system,"PingFang TC",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticket .tr{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticket .ft{margin-top:auto;font:12px "JetBrains Mono",monospace;color:#c7d2e6}
+.ticket .stub{width:84px;border-left:2px dashed rgba(255,255,255,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.ticket .stub b{font:600 26px "JetBrains Mono",monospace}
+.ticket .stub small{font:11px "JetBrains Mono",monospace;letter-spacing:.12em;color:var(--mut)}
+.ticket .bc{width:56px;height:16px;opacity:.7;background:repeating-linear-gradient(90deg,#c7d2e6 0 2px,transparent 2px 4px,#c7d2e6 4px 5px,transparent 5px 8px)}
+.ticket .holo{position:absolute;top:0;right:0;bottom:0;width:5px;background:linear-gradient(180deg,#00f0ff,#ff2bd6,#fcee0a,#3dffa8);opacity:.7}
+.c{color:var(--c)}.m{color:#ff5ce0}.y{color:var(--y)}.g{color:var(--g)}
+.search{display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid rgba(0,240,255,.3);background:rgba(11,14,24,.86)}
+.search input{flex:1;min-height:46px;background:none;border:0;outline:0}
+.seg{display:flex;margin:12px 0;border:1px solid var(--line);background:rgba(11,14,24,.86)}
+.seg button{flex:1;min-height:40px;font-size:13px;color:var(--mut)}
+.seg button[aria-pressed=true]{background:var(--c);color:#05060a;font-weight:700}
+.bars{display:flex;align-items:flex-end;gap:10px;height:150px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;font:11px "JetBrains Mono",monospace;color:var(--mut)}
+.bars i{width:100%;max-width:32px;background:linear-gradient(to top,rgba(255,43,214,.25),var(--m));box-shadow:0 0 12px rgba(255,43,214,.5)}
+.rank li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.rank{list-style:none;margin:0;padding:0}
+nav.tab{position:absolute;left:0;right:0;bottom:0;z-index:20;height:calc(68px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;background:rgba(5,6,10,.95);border-top:1px solid rgba(0,240,255,.4)}
+nav.tab button{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:52px;justify-content:center;color:#8d9ab0;font-size:10px}
+nav.tab button[aria-current]{color:var(--c)}
+nav.tab button[aria-current] svg{filter:drop-shadow(0 0 6px rgba(0,240,255,.8))}
+nav.tab .add{justify-self:center;width:56px;height:56px;margin-top:-24px;display:grid;place-items:center;background:var(--y);color:#0a0a0a;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))}
+.screen[data-screen=detail]{background:#0b0d18;padding-bottom:40px}
+.hero{margin:-48px -16px 14px;height:260px;position:relative;background:radial-gradient(60% 80% at 75% 25%,rgba(255,43,214,.6),transparent 60%),radial-gradient(60% 70% at 15% 85%,rgba(0,240,255,.45),transparent 60%),#090b14}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,#0b0d18 4%,transparent 60%)}
+.hero .cap{position:absolute;left:16px;right:16px;bottom:12px;z-index:1}
+.hero .top{position:absolute;top:max(env(safe-area-inset-top),48px);left:12px;right:12px;display:flex;justify-content:space-between;z-index:1}
+.ib{width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(160,180,220,.3);background:rgba(5,6,10,.6)}
+.btn{min-height:44px;padding:0 16px;border:1px solid var(--c);color:var(--c);font-weight:700;background:rgba(0,240,255,.08)}
+.btn.solid{background:var(--y);border-color:var(--y);color:#0a0a0a}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin:0}
+.facts div{background:#0b0e18;padding:9px 12px}
+.facts dt{font:10px "JetBrains Mono",monospace;letter-spacing:.18em;color:var(--mut)}
+.facts dd{margin:2px 0 0}
+.sl{list-style:none;margin:0;padding:0}
+.sl li{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.sl li span{font:12px "JetBrains Mono",monospace;color:var(--c);width:22px}
+.sl .enc{font:11px "JetBrains Mono",monospace;letter-spacing:.25em;color:#ff5ce0;border:0;padding-top:14px}
+.sheet .panel{background:linear-gradient(180deg,#0d1120,#070910);border-top:1px solid var(--c);padding:16px;clip-path:none}
+.f{display:flex;flex-direction:column;gap:12px}
+.f label{font:11px "JetBrains Mono",monospace;letter-spacing:.16em;color:var(--c);display:flex;flex-direction:column;gap:6px}
+.f input,.f textarea{min-height:46px;padding:10px 12px;background:rgba(5,6,10,.8);border:1px solid var(--line);color:#e9f1ff;font-family:-apple-system,"PingFang TC",sans-serif;letter-spacing:0;border-radius:0}
+.f input:focus,.f textarea:focus{outline:0;border-color:var(--c);box-shadow:0 0 14px rgba(0,240,255,.3)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rate{display:flex;gap:4px}
+.rate input{position:absolute;opacity:0}
+.rate label{font-size:28px;color:#3a4357;min-width:40px;min-height:44px;display:grid;place-items:center}
+.rate input:checked+label{color:var(--y)}
+.toast{background:#0b0e18;border:1px solid var(--g);font:13px "JetBrains Mono",monospace;color:#e9f1ff}
+</style>
+</head>
+<body>
+<a class="proto-home" href="index.html">← 全部原型</a>
+<div class="app">
+  <svg class="city" aria-hidden="true" viewBox="0 0 390 280" preserveAspectRatio="xMidYMax slice">
+    <g fill="#0a0c16"><rect x="0" y="120" width="46" height="160"/><rect x="50" y="60" width="38" height="220"/><rect x="92" y="150" width="56" height="130"/><rect x="152" y="40" width="44" height="240"/><rect x="200" y="110" width="60" height="170"/><rect x="264" y="70" width="40" height="210"/><rect x="308" y="130" width="34" height="150"/><rect x="346" y="90" width="44" height="190"/></g>
+    <g fill="#ffc47a" opacity=".5"><rect x="58" y="80" width="4" height="6"/><rect x="160" y="60" width="4" height="6"/><rect x="214" y="130" width="4" height="6"/><rect x="272" y="100" width="4" height="6"/><rect x="356" y="120" width="4" height="6"/></g>
+    <rect x="186" y="70" width="6" height="80" fill="#ff2bd6" opacity=".85"/><rect x="296" y="96" width="5" height="60" fill="#00f0ff" opacity=".8"/>
+  </svg>
+  <div class="fx" aria-hidden="true"></div>
+
+  <main class="screen" data-screen="home">
+    <div class="kick">● SYS.ONLINE // <span id="clock"></span></div>
+    <h1>NEON//LIVE</h1>
+    <div id="next"></div>
+    <h2>記憶體核心</h2>
+    <div class="grid2" id="hstats"></div>
+    <h2>最近紀錄</h2>
+    <div id="recent"></div>
+  </main>
+
+  <main class="screen" data-screen="archive">
+    <div class="kick">ARCHIVE // 全部場次</div>
+    <h1>檔案庫</h1>
+    <label class="search"><span class="sr">搜尋</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="搜尋藝人、場館、歌曲…"></label>
+    <div class="seg" id="seg"><button data-f="all" aria-pressed="true">全部</button><button data-f="attended" aria-pressed="false">已參加</button><button data-f="going" aria-pressed="false">即將</button><button data-f="wish" aria-pressed="false">願望</button></div>
+    <div id="alist"></div>
+  </main>
+
+  <main class="screen" data-screen="stats">
+    <div class="kick">ANALYTICS // 演出數據</div>
+    <h1>數據分析</h1>
+    <div id="sbody"></div>
+  </main>
+
+  <main class="screen" data-screen="settings">
+    <div class="kick">SYSTEM // CONFIG</div>
+    <h1>系統</h1>
+    <div class="panel"><p style="margin:0;color:#c7d2e6">這是可點擊原型，資料只存在記憶體，重新整理就會回到範例資料。正式版本請用 concert-log/index.html。</p></div>
+    <h2>視覺效果</h2>
+    <div class="panel" style="display:flex;flex-direction:column;gap:6px">
+      <button class="btn" data-toast="原型：雨景動畫切換">雨景動畫 ON</button>
+      <button class="btn" data-toast="原型：掃描線切換">CRT 掃描線 ON</button>
+    </div>
+  </main>
+
+  <main class="screen" data-screen="detail" id="detail"></main>
+
+  <nav class="tab" data-nav aria-label="主要分頁">
+    <button data-go="home"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg>主控台</button>
+    <button data-go="archive"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7h18v13H3zM6 4h12M8 11h8M8 15h5"/></svg>檔案庫</button>
+    <button class="add" data-sheet="add" aria-label="新增演唱會"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button data-go="stats"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>數據</button>
+    <button data-go="settings"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>系統</button>
+  </nav>
+
+  <div class="sheet" id="add" role="dialog" aria-modal="true" aria-label="新增演唱會">
+    <div class="scrim" data-close></div>
+    <div class="panel">
+      <form class="f" data-add>
+        <div style="display:flex;justify-content:space-between;align-items:center"><button type="button" class="btn" data-close style="border-color:var(--line);color:#e9f1ff">取消</button><span class="kick">NEW.ENTRY</span><button class="btn solid">儲存</button></div>
+        <label>藝人 *<input name="artist" placeholder="例：五月天"></label>
+        <label>巡演名稱<input name="tour"></label>
+        <div class="two"><label>日期 *<input name="date" type="date"></label><label>時間<input name="time" type="time"></label></div>
+        <div class="two"><label>場館<input name="venue"></label><label>座位<input name="seat"></label></div>
+        <div>
+          <span class="kick">評分</span>
+          <div class="rate" role="radiogroup" aria-label="評分"><input type="radio" name="rating" value="1" id="r1"><label for="r1" aria-label="1 顆星">★</label><input type="radio" name="rating" value="2" id="r2"><label for="r2" aria-label="2 顆星">★</label><input type="radio" name="rating" value="3" id="r3"><label for="r3" aria-label="3 顆星">★</label><input type="radio" name="rating" value="4" id="r4"><label for="r4" aria-label="4 顆星">★</label><input type="radio" name="rating" value="5" id="r5"><label for="r5" aria-label="5 顆星">★</label></div>
+        </div>
+        <label>歌單（一行一首，安可前輸入 ENCORE）<textarea name="setlistText" rows="5"></textarea></label>
+      </form>
+    </div>
+  </div>
+  <div class="toast" role="status" aria-live="polite"></div>
+</div>
+<script src="shared.js"></script>
+<script>
+const { esc } = P;
+const COL = { c: 'c', m: 'm', y: 'y' };
+const ST = { attended: 'g', going: 'c', wish: 'm' };
+const ticket = (s) => { const p = P.parts(s.date); return `
+  <button class="ticket" data-open="${s.id}">
+    <span class="mn"><span class="st ${ST[s.status]}">${P.STATUS_EN[s.status]} // ${P.STATUS[s.status]}</span>
+      <span class="ar">${esc(s.artist)}</span><span class="tr">${esc(s.tour || '—')}</span>
+      <span class="ft">${s.rating ? `<span class="y">${P.stars(s.rating)}</span> · ` : ''}${esc(s.venue || '場館未定')}</span></span>
+    <span class="stub"><b class="${COL[s.hue]}">${p.d}</b><small>${p.mon} ${p.yy}</small><span class="bc"></span></span>
+    <span class="holo"></span>
+  </button>`; };
+
+let filter = 'all', cdTimer;
+function render() {
+  const n = P.next();
+  clearInterval(cdTimer);
+  document.getElementById('next').innerHTML = n ? `
+    <button class="panel next" data-open="${n.id}" style="width:100%;text-align:left">
+      <div class="lbl mono">▶ NEXT TARGET // 下一場</div><div class="ar disp">${esc(n.artist)}</div>
+      <div style="font-size:13px;color:var(--mut)">${P.parts(n.date).md} ${n.time} · ${esc(n.venue)}</div><div class="cd" id="cd"></div></button>`
+    : `<div class="panel">尚無排程</div>`;
+  if (n) cdTimer = P.everySecond(() => { const c = P.countdown(n); const el = document.getElementById('cd'); if (el) el.innerHTML = `<div><b>${c.d}</b><span>天</span></div><div><b>${c.h}</b><span>時</span></div><div><b>${c.m}</b><span>分</span></div><div><b>${c.s}</b><span>秒</span></div>`; });
+  const st = P.stats();
+  document.getElementById('hstats').innerHTML = [['c', st.total, '已參加場次'], ['m', st.artists, '不同藝人'], ['y', st.venues.length, '去過場館'], ['g', st.songs, '現場聽過的歌']].map(([c, v, l]) => `<div class="panel stat"><b class="${c}">${v}</b><span>${l}</span></div>`).join('');
+  document.getElementById('recent').innerHTML = P.attended().slice(0, 3).map(ticket).join('');
+  renderArchive(); renderStats();
+}
+function renderArchive() {
+  const list = P.list(filter, document.getElementById('q').value);
+  let html = '', year = '';
+  for (const s of list) { const y = s.date.slice(0, 4); if (y !== year) { year = y; html += `<div class="mono y" style="margin:16px 0 8px;font-size:13px;letter-spacing:.2em">// ${y}</div>`; } html += ticket(s); }
+  document.getElementById('alist').innerHTML = html || '<div class="panel">0 RESULTS</div>';
+}
+function renderStats() {
+  const st = P.stats(); const max = Math.max(...st.years.map((y) => y[1]));
+  document.getElementById('sbody').innerHTML = `
+    <div class="grid2"><div class="panel stat"><b class="c">${st.total}</b><span>總場次</span></div><div class="panel stat"><b class="y">${st.avg}</b><span>平均評分</span></div></div>
+    <h2>年度場次</h2><div class="panel"><div class="bars">${st.years.map(([y, v]) => `<div><span style="color:#e9f1ff">${v}</span><i style="height:${v / max * 100}%"></i>${y}</div>`).join('')}</div></div>
+    <h2>最常看的藝人</h2><div class="panel"><ol class="rank">${st.topArtists.slice(0, 5).map(([a, v]) => `<li><span>${esc(a)}</span><span class="mono c">${v} 場</span></li>`).join('')}</ol></div>
+    <h2>票券花費</h2><div class="panel mono y" style="font-size:22px">TWD ${st.spend.toLocaleString()}</div>`;
+}
+function detail(id) {
+  const s = P.get(id), p = P.parts(s.date);
+  document.getElementById('detail').innerHTML = `
+    <div class="hero"><div class="top"><button class="ib" data-back aria-label="返回"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e9f1ff" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button><button class="btn" data-toast="原型：編輯畫面">編輯</button></div>
+      <div class="cap"><span class="mono ${ST[s.status]}" style="font-size:11px;letter-spacing:.15em;border:1px solid currentColor;padding:3px 7px;background:rgba(0,0,0,.4)">● ${P.STATUS_EN[s.status]} // ${P.STATUS[s.status]}</span>
+      <div class="disp" style="font-size:30px;font-weight:700;margin-top:8px">${esc(s.artist)}</div><div style="color:#d8e2f5">${esc(s.tour)}</div></div></div>
+    <dl class="facts"><div><dt>DATE</dt><dd>${s.date} ${s.time}</dd></div><div><dt>RATING</dt><dd class="y">${s.rating ? P.stars(s.rating) : '—'}</dd></div>
+      <div><dt>VENUE</dt><dd>${esc(s.venue || '—')}</dd></div><div><dt>SEAT</dt><dd>${esc(s.seat || '—')}</dd></div>
+      <div><dt>PRICE</dt><dd>${s.price ? 'TWD ' + s.price.toLocaleString() : '—'}</dd></div><div><dt>WITH</dt><dd>${esc(s.with || '—')}</dd></div></dl>
+    ${P.songs(s) ? `<h2>SETLIST · ${P.songs(s)} 首</h2><ol class="sl">${s.setlist.map((t, i) => `<li><span>${P.pad(i + 1)}</span>${esc(t)}</li>`).join('')}${s.encore.length ? `<li class="enc">// ENCORE</li>` + s.encore.map((t, i) => `<li><span>${P.pad(s.setlist.length + i + 1)}</span>${esc(t)}</li>`).join('') : ''}</ol>` : ''}
+    ${s.notes ? `<h2>回憶紀錄</h2><div class="panel">${esc(s.notes)}</div>` : ''}`;
+}
+document.getElementById('seg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; document.querySelectorAll('#seg button').forEach((x) => x.setAttribute('aria-pressed', x === b)); renderArchive(); });
+document.getElementById('q').addEventListener('input', renderArchive);
+P.everySecond(() => { document.getElementById('clock').textContent = new Date().toTimeString().slice(0, 5); });
+P.init({ render, detail, onGo: (n) => { document.querySelector('nav.tab').style.display = n === 'detail' ? 'none' : ''; } });
+</script>
+</body>
+</html>

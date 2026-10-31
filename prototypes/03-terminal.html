@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>03 磷光終端 原型</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+.app{--g:#39ff8a;--dim:#7fd8a4;--line:#1d6b3e;--edge:#2fbf6a;--amb:#ffb000;color:var(--g);font:13px/1.55 "IBM Plex Mono","PingFang TC",monospace;text-shadow:0 0 6px rgba(57,255,138,.45);background:radial-gradient(120% 90% at 50% 45%,#06140b,#020703 75%)}
+.app::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:60;background:repeating-linear-gradient(180deg,transparent 0 2px,rgba(0,0,0,.33) 2px 3px)}
+.screen{padding:max(env(safe-area-inset-top),48px) 16px 110px}
+.hd{display:flex;justify-content:space-between;color:var(--dim);font-size:11px}
+h1{margin:2px 0 10px;font:44px/.9 VT323,monospace;font-weight:400}
+.cur{display:inline-block;width:14px;height:28px;background:var(--g);vertical-align:-3px;margin-left:4px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.cmd{display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--edge);background:rgba(57,255,138,.05)}
+.cmd input{flex:1;min-height:46px;background:none;border:0;outline:0;color:var(--g);font-family:inherit;text-shadow:inherit}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.chips button{min-height:34px;padding:0 10px;border:1px dashed var(--edge);color:var(--dim)}
+.out{border-left:2px solid var(--line);padding-left:10px;margin-bottom:12px;color:var(--dim);white-space:pre-wrap}
+.out b{color:var(--g);font-weight:400}
+.amb{color:var(--amb);text-shadow:0 0 6px rgba(255,176,0,.45)}
+.box{border:1px solid var(--amb);padding:10px 12px;margin-bottom:12px}
+.big{font:34px/1 VT323,monospace}
+.head{color:var(--dim);font-size:11px;border-bottom:1px solid var(--line);padding-bottom:4px;display:grid;grid-template-columns:76px 1fr 54px;gap:6px}
+.ln{display:grid;grid-template-columns:76px minmax(0,1fr) 54px;gap:6px;min-height:44px;align-items:center;border-bottom:1px dotted var(--line);width:100%;text-align:left}
+.ln:active,.ln:focus-visible{background:var(--g);color:#020703;text-shadow:none}
+.ln span:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ln span:last-child{text-align:right}
+pre{margin:0;font:inherit;white-space:pre-wrap}
+nav.fk{position:absolute;left:0;right:0;bottom:0;z-index:20;padding:8px 8px max(env(safe-area-inset-bottom),18px);display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border-top:1px solid var(--edge);background:#020703}
+nav.fk button{min-height:48px;border:1px solid var(--edge)}
+nav.fk button[aria-current]{background:var(--g);color:#020703;text-shadow:none;font-weight:600}
+dl{display:grid;grid-template-columns:72px 1fr;gap:4px 8px;margin:10px 0}
+dt{color:var(--dim)}dd{margin:0}
+.act{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+.act button{min-height:48px;border:1px solid var(--edge)}
+.act .p{background:var(--g);color:#020703;text-shadow:none;font-weight:600}
+.f label{display:grid;grid-template-columns:80px 1fr;align-items:center;gap:6px;border-bottom:1px dotted var(--line)}
+.f label span{color:var(--dim)}
+.f input,.f textarea{min-height:44px;background:none;border:0;outline:0;color:var(--g);font-family:inherit;text-shadow:inherit}
+.f textarea{padding-top:12px;resize:vertical}
+.toast{background:#020703;border:1px solid var(--amb);color:var(--amb)}
+</style>
+</head>
+<body>
+<a class="proto-home" href="index.html">← 全部原型</a>
+<div class="app">
+  <main class="screen" data-screen="home">
+    <div class="hd"><span>GIGLOG TERMINAL v2.6</span><span id="mem"></span></div>
+    <h1>&gt; GIG_LOG<span class="cur"></span></h1>
+    <form class="cmd" id="cmdf"><span class="amb">$</span><label class="sr" for="cmd">指令</label><input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="輸入 help 查看指令"></form>
+    <div class="chips"><button data-cmd="help">[help]</button><button data-cmd="next">[next]</button><button data-cmd="find 台北">[find 台北]</button><button data-cmd="stats">[stats]</button><button data-cmd="new">[new]</button><button data-cmd="clear">[clear]</button></div>
+    <div id="out"></div>
+    <div id="nextbox"></div>
+    <div class="head"><span>DATE</span><span>ARTIST</span><span style="text-align:right">RTG</span></div>
+    <div id="rows"></div>
+  </main>
+
+  <main class="screen" data-screen="stats">
+    <div class="hd"><span>$ stats --all</span><span>ANALYTICS</span></div>
+    <h1>&gt; STATS</h1>
+    <div id="sbody"></div>
+  </main>
+
+  <main class="screen" data-screen="new">
+    <div class="hd"><span>$ log new</span><span>WRITE MODE</span></div>
+    <h1>&gt; NEW_RECORD</h1>
+    <form class="f" data-add>
+      <label><span>artist*</span><input name="artist" placeholder="_" autocomplete="off"></label>
+      <label><span>tour</span><input name="tour" placeholder="_"></label>
+      <label><span>date*</span><input name="date" type="date"></label>
+      <label><span>venue</span><input name="venue" placeholder="_"></label>
+      <label><span>seat</span><input name="seat" placeholder="_"></label>
+      <label><span>rating</span><input name="rating" type="number" min="0" max="5" inputmode="numeric" placeholder="0-5"></label>
+      <label style="align-items:start"><span style="padding-top:12px">setlist</span><textarea name="setlistText" rows="6" placeholder="一行一首&#10;ENCORE&#10;安可曲"></textarea></label>
+      <div class="act" style="grid-template-columns:1fr 1fr"><button type="button" data-go="home">[ESC] 取消</button><button class="p">[ENTER] 寫入</button></div>
+    </form>
+  </main>
+
+  <main class="screen" data-screen="sys">
+    <div class="hd"><span>$ sys --info</span><span>SYSTEM</span></div>
+    <h1>&gt; SYSTEM</h1>
+    <pre class="out">mode ......... PROTOTYPE
+storage ...... RAM（重新整理即清除）
+records ...... <b id="cnt"></b>
+theme ........ PHOSPHOR / P1 GREEN</pre>
+    <div class="act" style="grid-template-columns:1fr 1fr"><button data-toast="原型：匯出 JSON">[X] 匯出</button><button data-toast="原型：切換琥珀色主題">[T] 琥珀主題</button></div>
+  </main>
+
+  <main class="screen" data-screen="detail" id="detail"></main>
+
+  <nav class="fk" data-nav aria-label="功能鍵">
+    <button data-go="home">F1 紀錄</button><button data-go="new">F2 新增</button><button data-go="stats">F3 數據</button><button data-go="sys">F4 系統</button>
+  </nav>
+  <div class="toast" role="status" aria-live="polite"></div>
+</div>
+<script src="shared.js"></script>
+<script>
+const { esc } = P;
+const rtg = (n) => n ? '*'.repeat(n) + '-'.repeat(5 - n) : '-----';
+const out = document.getElementById('out');
+const print = (html) => { out.innerHTML = `<div class="out">${html}</div>` + out.innerHTML; };
+const row = (s) => `<button class="ln" data-open="${s.id}"><span>${s.date.slice(2)}</span><span>${esc(s.artist)}</span><span>${s.status === 'attended' ? rtg(s.rating) : s.status === 'going' ? '<span class="amb">NEXT</span>' : 'WISH'}</span></button>`;
+let rows = null;
+function render(list) {
+  rows = list || null;
+  document.getElementById('rows').innerHTML = (list || P.list()).map(row).join('') || '<div class="out">0 records found</div>';
+  const n = P.next();
+  document.getElementById('nextbox').innerHTML = n ? `<button class="box amb" data-open="${n.id}" style="display:block;width:100%;text-align:left"><div style="font-size:11px">!! INCOMING EVENT</div><div class="big" id="tminus"></div><div>${esc(n.artist)} @ ${esc(n.venue)}</div></button>` : '';
+  document.getElementById('mem').textContent = `MEM ${P.shows.length}/∞`;
+  document.getElementById('cnt').textContent = P.shows.length;
+  const st = P.stats(); const max = Math.max(...st.years.map((y) => y[1]));
+  const bar = (v, w = 14) => '█'.repeat(Math.round(v / max * w)) + '░'.repeat(w - Math.round(v / max * w));
+  document.getElementById('sbody').innerHTML = `<pre>total_shows .. <b>${st.total}</b>
+artists ...... ${st.artists}
+venues ....... ${st.venues.length}
+songs_heard .. ${st.songs}
+avg_rating ... ${st.avg}
+spend_twd .... ${st.spend.toLocaleString()}
+
+<span style="color:var(--dim)">-- per year --</span>
+${st.years.map(([y, v]) => `${y} ${bar(v)} ${String(v).padStart(2)}`).join('\n')}
+
+<span style="color:var(--dim)">-- top artists --</span>
+${st.topArtists.slice(0, 5).map(([a, v], i) => `${i + 1}. ${esc(a)} (${v})`).join('\n')}</pre>`;
+}
+P.everySecond(() => { const n = P.next(), el = document.getElementById('tminus'); if (n && el) { const c = P.countdown(n); el.textContent = `T-${c.d}D ${c.h}:${c.m}:${c.s}`; } });
+
+function run(raw) {
+  const line = raw.trim(); if (!line) return;
+  const [cmd, ...rest] = line.split(/\s+/); const arg = rest.join(' ');
+  const echo = `<b>$ ${esc(line)}</b>\n`;
+  switch (cmd.toLowerCase()) {
+    case 'help': print(echo + 'help ......... 顯示指令\nls ........... 列出全部\nfind &lt;字&gt; ... 搜尋藝人/場館/歌曲\nnext ......... 下一場\nopen &lt;n&gt; ..... 開啟第 n 筆\nstats ........ 數據\nnew .......... 新增紀錄\nclear ........ 清除畫面'); break;
+    case 'ls': render(); print(echo + `${P.shows.length} records`); break;
+    case 'find': { const r = P.list('all', arg); render(r); print(echo + `${r.length} match(es) for "${esc(arg)}"`); break; }
+    case 'next': { const n = P.next(); if (n) { P.go('detail'); detail(n.id); } else print(echo + 'no incoming event'); break; }
+    case 'open': { const list = rows || P.list(); const s = list[Number(arg) - 1]; if (s) { detail(s.id); P.go('detail'); } else print(echo + '<span class="amb">ERR: index out of range</span>'); break; }
+    case 'stats': P.go('stats'); break;
+    case 'new': case 'log': P.go('new'); break;
+    case 'clear': out.innerHTML = ''; render(); break;
+    default: print(echo + `<span class="amb">command not found: ${esc(cmd)}</span>\n輸入 help 查看指令`);
+  }
+}
+document.getElementById('cmdf').addEventListener('submit', (e) => { e.preventDefault(); const i = document.getElementById('cmd'); run(i.value); i.value = ''; });
+document.querySelector('.chips').addEventListener('click', (e) => { const b = e.target.closest('[data-cmd]'); if (b) run(b.dataset.cmd); });
+
+function detail(id) {
+  const s = P.get(id); let n = 0;
+  document.getElementById('detail').innerHTML = `
+    <button data-back style="min-height:44px;color:var(--dim)">&lt; cd ..</button>
+    <div style="border:1px solid var(--edge);padding:12px;margin-top:6px"><div style="color:var(--dim);font-size:11px">RECORD #${String(P.shows.indexOf(s) + 1).padStart(4, '0')} · STATUS: <b style="font-weight:400;color:var(--g)">${P.STATUS_EN[s.status]}</b></div>
+      <div style="font:40px/1 VT323,'PingFang TC',monospace;margin-top:6px">${esc(s.artist.toUpperCase())}</div><div style="color:var(--dim)">${esc(s.tour)}</div></div>
+    <dl><dt>date:</dt><dd>${s.date}${s.time ? 'T' + s.time : ''}</dd><dt>venue:</dt><dd>${esc(s.venue || 'null')} / ${esc(s.city || 'null')}</dd><dt>seat:</dt><dd>${esc(s.seat || 'null')}</dd><dt>price:</dt><dd>${s.price ? 'TWD ' + s.price.toLocaleString() : 'null'}</dd><dt>rating:</dt><dd>[${s.rating ? '#'.repeat(s.rating) + '.'.repeat(5 - s.rating) : '.....'}] ${s.rating}/5</dd></dl>
+    ${P.songs(s) ? `<pre style="border-top:1px dashed var(--edge);padding-top:8px;line-height:1.75">$ cat setlist.txt\n${s.setlist.map((t) => `${P.pad(++n)}  ${esc(t)}`).join('\n')}${s.encore.length ? `\n<span class="amb">--- ENCORE ---</span>\n` + s.encore.map((t) => `${P.pad(++n)}  ${esc(t)}`).join('\n') : ''}</pre>` : '<pre style="color:var(--dim)">$ cat setlist.txt\n(empty)</pre>'}
+    ${s.notes ? `<div class="amb" style="border-left:2px solid var(--amb);padding-left:10px;margin-top:10px"># note: ${esc(s.notes)}</div>` : ''}
+    <div class="act"><button class="p" data-toast="原型：編輯模式">[E] 編輯</button><button data-toast="原型：已複製分享文字">[S] 分享</button><button class="amb" style="border-color:var(--amb)" data-toast="原型：不會真的刪除">[D] 刪除</button></div>`;
+}
+P.init({ render: () => render(), detail });
+</script>
+</body>
+</html>
