@@ -382,6 +382,40 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 .wyears{display:flex;gap:8px;flex-wrap:wrap}
 .wyears button{min-height:40px;padding:0 16px;border-radius:20px;border:1px solid rgba(255,255,255,.25);font:600 14px "JetBrains Mono",monospace}
 .wyears button[aria-pressed=true]{background:var(--chrome);color:#0a0a0a;border-color:transparent}
+/* ============ 場館提示 ============ */
+.vsug{display:flex;flex-direction:column;margin-top:-6px;border-radius:14px;overflow:hidden;border:1px solid rgba(var(--c-rgb),.45);background:rgba(var(--panel-rgb),.98);box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.vsug[hidden]{display:none}
+.vsug button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:48px;padding:8px 14px;text-align:left;border-top:1px solid rgba(255,255,255,.07);font-size:15px}
+.vsug button:first-child{border-top:0}
+.vsug button:active,.vsug button:focus-visible{background:rgba(var(--c-rgb),.15)}
+.vsug b{font-weight:600}
+.vsug span{font-size:12px;color:var(--mut);flex:none}
+/* ============ 操作選單 ============ */
+.actmenu{position:absolute;z-index:60;min-width:200px;padding:6px;border-radius:18px;background:rgba(var(--panel-rgb),.94);border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 50px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+.actmenu[hidden]{display:none}
+.actmenu .t{padding:6px 10px 4px;font-size:12px;color:var(--mut)}
+.actmenu button{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:0 12px;border-radius:12px;font-size:15px;text-align:left}
+.actmenu button:active,.actmenu button:focus-visible{background:rgba(255,255,255,.08)}
+.actmenu .danger{color:#ff6b81}
+/* ============ 數位票根選擇器 ============ */
+.ticketview{position:absolute;inset:0;z-index:88;display:none;flex-direction:column;background:rgba(var(--panel-rgb),.97);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);padding:max(env(safe-area-inset-top),20px) 0 max(env(safe-area-inset-bottom),18px)}
+.ticketview.on{display:flex}
+.tvhd{display:flex;justify-content:space-between;align-items:center;padding:0 16px 8px}
+.tvhd b{font-size:17px}
+.tvtrack{flex:1;min-height:0;display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 15%;scrollbar-width:none}
+.tvtrack::-webkit-scrollbar{display:none}
+.tvs{flex:0 0 70%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:0}
+.tvs b{font-size:13px;color:var(--mut);font-weight:600}
+.tvimg{flex:1;min-height:0;width:100%;border-radius:16px;overflow:hidden;background:transparent;display:grid;place-items:center}
+.tvimg span{font-size:13px;color:var(--mut)}
+.tvimg img{width:100%;height:100%;object-fit:contain;display:block}
+.tvnav{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:12px}
+.tvnav span{font:600 14px "JetBrains Mono",monospace;min-width:64px;text-align:center}
+.tvdots{display:flex;justify-content:center;gap:5px;margin:10px 0 14px}
+.tvdots i{width:6px;height:6px;border-radius:3px;background:rgba(255,255,255,.25)}
+.tvdots i.on{width:18px;background:var(--c)}
+.tvbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px}
+.tvbtns button{min-height:52px;border-radius:26px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
 .lightbox{position:absolute;inset:0;z-index:70;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center}
 .lightbox.on{display:flex}
 .lightbox img{max-width:100%;max-height:100%}
@@ -451,7 +485,8 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
         <label>活動類型<select name="cat"><option value="concert">演唱會</option><option value="fest">音樂祭</option><option value="fanmeet">見面會</option><option value="musical">音樂劇</option><option value="other">其他</option></select></label>
         <div class="two"><label>狀態<select name="status"><option value="">依日期自動</option><option value="wish">想看</option><option value="presale">等開賣</option><option value="going">已購票</option><option value="attended">已參加</option></select></label><label>開賣時間<input name="sale" type="datetime-local"></label></div>
         <div class="two"><label>日期 *<input name="date" type="date"></label><label>時間<input name="time" type="time"></label></div>
-        <div class="two"><label>場館<input name="venue"></label><label>座位<input name="seat"></label></div>
+        <div class="two"><label>場館<input name="venue" placeholder="輸入關鍵字，例：巨蛋"></label><label>座位<input name="seat"></label></div>
+        <div class="vsug" id="venueSug" role="listbox" aria-label="場館建議" hidden></div>
         <div class="three">
           <label>票價（單張）<input name="price" type="number" inputmode="decimal" min="0" placeholder="0"></label>
           <label>張數<input name="qty" type="number" inputmode="numeric" min="1" value="1"></label>
@@ -483,6 +518,20 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
     <button class="wx" id="wclose" aria-label="關閉年度回顧"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <div id="wslide"></div>
     <div class="tap"><button id="wprev" aria-label="上一頁"></button><button id="wnext" aria-label="下一頁"></button></div>
+  </section>
+  <div class="actmenu" id="actMenu" role="menu" hidden>
+    <div class="t">演唱會操作</div>
+    <button role="menuitem" data-act="ticket"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4z"/></svg>數位票根</button>
+    <button role="menuitem" data-act="edit"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg>修改演唱會</button>
+    <button role="menuitem" data-act="dup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>複製演唱會</button>
+    <button role="menuitem" data-act="del" class="danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>刪除演唱會</button>
+  </div>
+  <section class="ticketview" id="ticketView" role="dialog" aria-modal="true" aria-label="數位票根">
+    <div class="tvhd"><b>選擇票根樣式</b><span style="display:flex;gap:8px"><button class="knob" id="tvRand" aria-label="隨機換一種風格"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eef1f6" stroke-width="2" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button><button class="knob" id="tvClose" aria-label="關閉"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eef1f6" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></span></div>
+    <div class="tvtrack" id="tvTrack"></div>
+    <div class="tvnav"><button class="knob" id="tvPrev" aria-label="上一個樣式"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eef1f6" stroke-width="2.2" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><span id="tvCount">1 / 12</span><button class="knob" id="tvNext" aria-label="下一個樣式"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eef1f6" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+    <div class="tvdots" id="tvDots" aria-hidden="true"></div>
+    <div class="tvbtns"><button class="chipbtn" id="tvSave"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>儲存照片</button><button class="cbtn" id="tvShare"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12v7h16v-7M12 3v12M7 8l5-5 5 5"/></svg>分享</button></div>
   </section>
   <div class="lightbox" id="lb" role="dialog" aria-label="照片，點一下關閉"><img alt=""></div>
   <div class="toast" role="status" aria-live="polite"></div>
@@ -1075,7 +1124,7 @@ function detail(id) {
       ${s.status === 'presale' ? '<div class="ln" style="color:var(--mut)"><span>※ 預估金額，搶到票前不計入花費</span></div>' : ''}</div>` : '<div class="empty">還沒填票價</div>';
   }
   document.getElementById('detail').innerHTML = `
-    <div style="padding:0 16px;display:flex;justify-content:space-between;gap:8px"><button class="knob" data-back aria-label="返回"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eef1f6" stroke-width="2" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><span style="display:flex;gap:8px"><button class="knob" data-share="${s.id}" aria-label="分享圖卡"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eef1f6" stroke-width="2" aria-hidden="true"><path d="M4 12v7h16v-7M12 3v12M7 8l5-5 5 5"/></svg></button><button class="cbtn" data-edit="${s.id}">編輯</button></span></div>
+    <div style="padding:0 16px;display:flex;justify-content:space-between;gap:8px"><button class="knob" data-back aria-label="返回"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eef1f6" stroke-width="2" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><span style="display:flex;gap:8px"><button class="knob" data-share="${s.id}" aria-label="數位票根"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eef1f6" stroke-width="1.8" aria-hidden="true"><path d="M3 7a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4z"/><path d="M9 5v14" stroke-dasharray="2 2"/></svg></button><button class="knob" data-menu="${s.id}" aria-label="更多操作" aria-haspopup="menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="#eef1f6" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></span></div>
     <div class="case"><div class="disc" aria-hidden="true"></div><div class="jewel" aria-hidden="true"><div style="background:${cover(s)}">${coverPhoto(s) ? '' : esc(s.artist.split(' ').pop().toUpperCase())}</div></div>
       <label class="coverbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l2-3h4l2 3"/></svg>${coverPhoto(s) ? '更換封面' : '上傳封面'}<input type="file" accept="image/*" hidden data-cover="${s.id}"></label></div>
     <div style="padding:14px 20px 0"><span class="mono ${ST[s.status]}" style="font-size:10px;letter-spacing:.18em;padding:3px 7px;border:1px solid currentColor;background:rgba(0,0,0,.4)">● ${P.STATUS_EN[s.status]} // ${P.STATUS[s.status]}</span><span class="catchip">${CATS[s.cat]}</span>
@@ -1221,7 +1270,7 @@ const parseSetlist = (text) => {
 const FIELDS = ['artist', 'tour', 'cat', 'status', 'sale', 'date', 'time', 'venue', 'city', 'seat', 'price', 'qty', 'cur', 'fee', 'with', 'notes'];
 function openEditor(id) {
   const s = id ? P.get(id) : null;
-  ed.reset();
+  ed.reset(); copyFrom = null; document.getElementById('venueSug').hidden = true;
   F('sid').value = s ? s.id : '';
   if (s) {
     for (const k of FIELDS) F(k).value = s[k] ?? '';
@@ -1253,6 +1302,10 @@ ed.addEventListener('submit', async (e) => {
       status: o.status || (o.date > P.today ? 'going' : 'attended')
     });
     if (o.cover instanceof File && o.cover.size) await addPhoto(s, o.cover, 'live', true);
+    else if (isNew && copyFrom && coverPhoto(copyFrom)) {   // 複製演唱會：沿用原本的封面照片（另存一份）
+      const b = await P.photoBlob(coverPhoto(copyFrom).id); if (b) { const nid = await P.putPhoto(b); s.photos.push({ id: nid, kind: 'live', cover: true }); }
+    }
+    copyFrom = null;
     await P.save(s);
     P.sheet('add', false); render(); detail(s.id); P.go('detail');
     P.toast(isNew ? '已儲存' : '已更新');
@@ -1344,6 +1397,253 @@ document.getElementById('btnWipe').addEventListener('click', async () => {
   await P.wipe(); render(); P.go('home'); P.toast('已清除全部資料'); storageInfo();
 });
 
+/* ================= 場館關鍵字提示 ================= */
+// n 場館名稱、c 城市、k 搜尋用別名（中英文、簡稱）
+const VENUES = [
+  { n: '台北小巨蛋', c: '台北', k: '臺北小巨蛋 Taipei Arena 小巨蛋 南京東路' },
+  { n: '台北大巨蛋', c: '台北', k: '臺北大巨蛋 Taipei Dome 大巨蛋 遠雄' },
+  { n: '台北流行音樂中心', c: '台北', k: '北流 Taipei Music Center TMC 表演廳 南港' },
+  { n: 'Legacy Taipei 音樂展演空間', c: '台北', k: 'Legacy 華山 傳音樂展演空間' },
+  { n: 'Legacy TERA', c: '新北', k: 'Legacy 新莊 宏匯' },
+  { n: 'Zepp New Taipei', c: '新北', k: 'Zepp 新莊 宏匯廣場' },
+  { n: 'The Wall Live House', c: '台北', k: '這牆 公館' },
+  { n: 'Riverside Live House', c: '台北', k: '河岸留言 西門紅樓' },
+  { n: '台北國際會議中心', c: '台北', k: '臺北國際會議中心 TICC 信義' },
+  { n: '台北南港展覽館', c: '台北', k: '南港展覽館 Nangang Exhibition Center 南港展覽館二館' },
+  { n: '台大綜合體育館', c: '台北', k: '臺大 NTU Sports Center 新體' },
+  { n: '台北和平籃球館', c: '台北', k: '和平籃球館 Heping Basketball' },
+  { n: '臺北田徑場', c: '台北', k: '台北田徑場 Taipei Stadium 田徑場' },
+  { n: '國家音樂廳', c: '台北', k: '兩廳院 National Concert Hall 中正紀念堂' },
+  { n: '國家戲劇院', c: '台北', k: '兩廳院 National Theater' },
+  { n: '國立體育大學綜合體育館', c: '桃園', k: '林口體育館 體大 NTSU Arena 林口' },
+  { n: '桃園國際棒球場', c: '桃園', k: '樂天桃園棒球場 Taoyuan Baseball' },
+  { n: '新莊體育館', c: '新北', k: 'Xinzhuang Gymnasium' },
+  { n: '新北市立板橋第一運動場', c: '新北', k: '板橋體育場 板橋第一運動場' },
+  { n: '臺中洲際棒球場', c: '台中', k: '台中洲際 Intercontinental Baseball Stadium' },
+  { n: '臺中國家歌劇院', c: '台中', k: '台中歌劇院 National Taichung Theater' },
+  { n: '臺中圓滿戶外劇場', c: '台中', k: '圓滿劇場 文心森林公園' },
+  { n: '高雄巨蛋', c: '高雄', k: 'Kaohsiung Arena 巨蛋 小港 左營 漢神巨蛋' },
+  { n: '高雄國家體育場', c: '高雄', k: '世運主場館 World Games Stadium 世運' },
+  { n: '高雄流行音樂中心', c: '高雄', k: '高流 Kaohsiung Music Center 海音館 珊瑚礁群' },
+  { n: '衛武營國家藝術文化中心', c: '高雄', k: '衛武營 Weiwuying' },
+  { n: '高雄駁二藝術特區', c: '高雄', k: '駁二 大港開唱 Pier-2' },
+  { n: '東京巨蛋', c: '東京', k: 'Tokyo Dome 東京ドーム 後樂園' },
+  { n: '日本武道館', c: '東京', k: 'Nippon Budokan 武道館' },
+  { n: '有明競技場', c: '東京', k: 'Ariake Arena 有明アリーナ' },
+  { n: '埼玉超級競技場', c: '埼玉', k: 'Saitama Super Arena さいたまスーパーアリーナ SSA' },
+  { n: 'K-Arena 橫濱', c: '橫濱', k: 'K-Arena Yokohama Karena' },
+  { n: '橫濱體育館', c: '橫濱', k: 'Yokohama Arena 横浜アリーナ' },
+  { n: '京瓷巨蛋大阪', c: '大阪', k: 'Kyocera Dome Osaka 京セラドーム 大阪巨蛋' },
+  { n: '名古屋巨蛋', c: '名古屋', k: 'Vantelin Dome バンテリンドーム ナゴヤドーム' },
+  { n: '福岡 PayPay 巨蛋', c: '福岡', k: 'Fukuoka PayPay Dome 福岡巨蛋' },
+  { n: '高尺天空巨蛋', c: '首爾', k: 'Gocheok Sky Dome 고척스카이돔 高尺巨蛋' },
+  { n: 'KSPO DOME', c: '首爾', k: '奧林匹克體操競技場 Olympic Gymnastics Arena 체조경기장 KSPO' },
+  { n: '首爾奧林匹克主競技場', c: '首爾', k: '蠶室 Jamsil Olympic Stadium 잠실' },
+  { n: 'INSPIRE Arena', c: '仁川', k: '仁川 Incheon 인스파이어' },
+  { n: '啟德主場館', c: '香港', k: 'Kai Tak Stadium 啟德體育園' },
+  { n: '亞洲國際博覽館', c: '香港', k: 'AsiaWorld-Expo 亞博 AWE' },
+  { n: '香港體育館', c: '香港', k: '紅館 紅磡 Hong Kong Coliseum' },
+  { n: '澳門威尼斯人綜藝館', c: '澳門', k: 'Cotai Arena 金光綜藝館 Venetian' },
+  { n: '新加坡國家體育場', c: '新加坡', k: 'Singapore National Stadium' },
+  { n: '曼谷拉加曼加拉國家體育場', c: '曼谷', k: 'Rajamangala Stadium Bangkok' }
+];
+const norm = (t) => String(t || '').toLowerCase().replace(/臺/g, '台').replace(/\s+/g, '');
+function venueMatches(q) {
+  q = norm(q); if (!q) return [];
+  const mine = new Map();
+  for (const s of P.shows) if (s.venue && !mine.has(s.venue)) { const known = VENUES.find((v) => v.n === s.venue); mine.set(s.venue, { n: s.venue, c: s.city || (known && known.c), k: known ? known.k : '', mine: true }); }
+  const all = [...mine.values(), ...VENUES.filter((v) => !mine.has(v.n))];
+  const score = (v) => { const n = norm(v.n), k = norm(v.k), c = norm(v.c); if (n.startsWith(q)) return 0; if (n.includes(q)) return 1; if (k.includes(q)) return 2; if (c.includes(q)) return 3; return 9; };
+  return all.map((v) => [score(v), v]).filter(([sc]) => sc < 9).map(([sc, v]) => [sc - (v.mine ? .5 : 0), v]).sort((a, b) => a[0] - b[0]).slice(0, 7).map(([, v]) => v);   // 去過的場館排前面
+}
+const vIn = F('venue'), vSug = document.getElementById('venueSug');
+function showVenueSug() {
+  const list = venueMatches(vIn.value);
+  if (!list.length || document.activeElement !== vIn) { vSug.hidden = true; return; }
+  vSug.innerHTML = list.map((v, i) => `<button type="button" role="option" data-vi="${i}"><b>${esc(v.n)}</b><span>${esc(v.c || '')}${v.mine ? ' · 去過' : ''}</span></button>`).join('');
+  vSug._list = list; vSug.hidden = false;
+}
+vIn.setAttribute('autocomplete', 'off'); vIn.setAttribute('role', 'combobox'); vIn.setAttribute('aria-controls', 'venueSug');
+vIn.addEventListener('input', showVenueSug); vIn.addEventListener('focus', showVenueSug);
+vIn.addEventListener('blur', () => setTimeout(() => { vSug.hidden = true; }, 180));
+vSug.addEventListener('pointerdown', (e) => e.preventDefault());   // 點選項時不讓輸入框先失焦
+vSug.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-vi]'); if (!b) return;
+  const v = vSug._list[b.dataset.vi]; vIn.value = v.n; if (v.c) F('city').value = v.c;
+  vSug.hidden = true; F('seat').focus();
+});
+
+/* ================= 詳情操作選單：數位票根／修改／複製／刪除 ================= */
+let menuId = null;
+function openMenu(id, btn) {
+  menuId = id; const m = document.getElementById('actMenu'); const r = btn.getBoundingClientRect(), app = document.querySelector('.app').getBoundingClientRect();
+  m.style.top = `${r.bottom - app.top + 8}px`; m.style.right = `${app.right - r.right}px`; m.hidden = false;
+  m.querySelector('button').focus();
+}
+const closeMenu = () => { document.getElementById('actMenu').hidden = true; };
+let copyFrom = null;
+function duplicate(id) {
+  const s = P.get(id); openEditor(id);
+  F('sid').value = ''; F('status').value = ''; copyFrom = s;   // 以原紀錄為底的新紀錄，狀態改回依日期自動判斷
+  document.getElementById('edTitle').textContent = 'COPY.ENTRY';
+  document.getElementById('edDel').hidden = true;
+  P.toast('已複製內容，修改日期等資料後按儲存');
+}
+async function deleteShow(id) {
+  const s = P.get(id); if (!s || !confirm(`確定刪除「${s.artist}」？照片也會一起刪除，無法復原。`)) return;
+  await P.remove(id); render(); P.go('home'); P.toast('已刪除');
+}
+
+/* ================= 數位票根：10 種主題風格 ================= */
+const TICKETS = [
+  ['aurora', '液態極光'], ['grid', '霓虹網格'], ['prism', '全息稜鏡'], ['space', '星塵深空'], ['wave', '音波脈衝'],
+  ['mercury', '液態水銀'], ['laser', '雷射光束'], ['spot', '舞台聚光'], ['circuit', '電路脈絡'], ['stick', '螢光人海']
+];
+function themeVars(id) {
+  const el = document.createElement('div'); el.dataset.theme = id; el.style.display = 'none'; document.querySelector('.app').appendChild(el);
+  const cs = getComputedStyle(el); const v = (k) => cs.getPropertyValue(k).trim();
+  const T = { c: v('--c'), m: v('--m'), y: v('--y'), g: v('--g'), v: v('--v'), c2: v('--c2'), m2: v('--m2'), base: v('--base'), card1: v('--card1'), card2: v('--card2'), mut: v('--mut') };
+  const rgbs = Object.fromEntries(['c', 'm', 'y', 'v'].map((k) => [k, v(`--${k}-rgb`)]));   // 先讀完再移除元素，移除後就讀不到了
+  el.remove();
+  return { ...T, rgb: (k) => rgbs[k] };
+}
+function wrapLines(g, text, max, maxLines) {
+  // 中日韓字逐字換行，英文單字整個換行
+  const tokens = String(text).match(/[\u2E80-\u9FFF\uAC00-\uD7AF\uFF00-\uFFEF]|[^\s\u2E80-\u9FFF\uAC00-\uD7AF\uFF00-\uFFEF]+|\s+/g) || [];
+  const out = []; let line = '', cut = false;
+  for (const tk of tokens) {
+    if (g.measureText(line + tk).width > max && line.trim()) { out.push(line.trim()); line = tk.trim() ? tk : ''; if (out.length === maxLines) { cut = true; break; } }
+    else line += tk;
+  }
+  if (!cut && line.trim()) out.push(line.trim());
+  if (cut) { let l = out[maxLines - 1]; while (l && g.measureText(l + '…').width > max) l = l.slice(0, -1); out[maxLines - 1] = l + '…'; }
+  return out.slice(0, maxLines);
+}
+function motif(g, id, T, W, H) {
+  const rnd = (() => { let x = 9; return () => (x = (Math.imul(x, 1103515245) + 12345) >>> 0) / 4294967296; })();
+  const blob = (x, y, r, col, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`); g.fillStyle = gr; g.fillRect(0, 0, W, H); };
+  const line = (x1, y1, x2, y2, col, w, blur) => { g.save(); g.strokeStyle = col; g.lineWidth = w; g.shadowColor = col; g.shadowBlur = blur; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); g.restore(); };
+  if (id === 'aurora') { blob(150, 350, 700, T.rgb('c'), .7); blob(950, 1100, 700, T.rgb('m'), .7); blob(450, 1750, 600, T.rgb('v'), .6); }
+  if (id === 'grid') {
+    const sky = g.createLinearGradient(0, 0, 0, 1150); sky.addColorStop(0, '#0b0418'); sky.addColorStop(1, `rgba(${T.rgb('c')},.55)`); g.fillStyle = sky; g.fillRect(0, 0, W, 1150);
+    const sun = g.createLinearGradient(0, 600, 0, 1150); sun.addColorStop(0, T.y); sun.addColorStop(1, T.m); g.fillStyle = sun; g.beginPath(); g.arc(540, 1050, 330, Math.PI, 0); g.fill();
+    g.fillStyle = '#0b0418'; for (let i = 0, y = 900; y < 1060; i++, y += 34) g.fillRect(0, y, W, 6 + i * 3);
+    g.fillStyle = '#0b0418'; g.fillRect(0, 1150, W, H);
+    for (let i = -12; i <= 12; i++) line(540 + i * 45, 1150, 540 + i * 300, H, T.c, 3, 12);
+    for (let y = 1160, k = 18; y < H; y += k, k *= 1.3) line(0, y, W, y, T.c, 3, 12);
+  }
+  if (id === 'prism') { if (g.createConicGradient) { const cg = g.createConicGradient(0, 540, 960); [T.c, T.v, T.m, T.y, T.g, T.c].forEach((c, i) => cg.addColorStop(i / 5, c)); g.globalAlpha = .45; g.fillStyle = cg; g.fillRect(0, 0, W, H); g.globalAlpha = 1; } for (let x = -H; x < W; x += 26) line(x, 0, x + H * .7, H, 'rgba(255,255,255,.06)', 2, 0); }
+  if (id === 'space') { blob(800, 400, 600, T.rgb('v'), .6); blob(200, 1300, 600, T.rgb('c'), .35); blob(800, 1700, 500, T.rgb('m'), .35); for (let i = 0; i < 380; i++) { const r = rnd() * 2.6; g.fillStyle = `rgba(255,255,255,${.3 + rnd() * .7})`; g.beginPath(); g.arc(rnd() * W, rnd() * H, r, 0, 7); g.fill(); } }
+  if (id === 'wave') { blob(540, 1000, 900, T.rgb('m'), .25); [['c', 120, .006, 760], ['m', 160, .004, 900], ['v', 90, .009, 1050], ['y', 60, .012, 840], ['c', 50, .015, 1700]].forEach(([k, a, f, y0], j) => { g.save(); g.strokeStyle = `rgba(${T.rgb(k)},.9)`; g.lineWidth = 5; g.shadowColor = `rgba(${T.rgb(k)},1)`; g.shadowBlur = 24; g.beginPath(); for (let x = 0; x <= W; x += 6) { const y = y0 + Math.sin(x * f + j) * a * (.4 + .6 * Math.sin(x / W * Math.PI)); x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); g.restore(); }); }
+  if (id === 'mercury') { blob(540, 300, 900, '42,45,53', .9); [[160, 360, 150], [930, 1250, 220], [300, 1780, 120], [880, 260, 70]].forEach(([x, y, r]) => { const gr = g.createRadialGradient(x - r * .35, y - r * .4, r * .05, x, y, r); gr.addColorStop(0, '#ffffff'); gr.addColorStop(.25, '#c9ced6'); gr.addColorStop(.6, '#4d535e'); gr.addColorStop(1, '#0b0c10'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); g.strokeStyle = `rgba(${T.rgb('c')},.5)`; g.lineWidth = 4; g.beginPath(); g.arc(x, y, r - 3, .3, 2.8); g.stroke(); }); }
+  if (id === 'laser') { blob(540, 1950, 800, T.rgb('m'), .45); for (let i = 0; i < 9; i++) { const a = -1.05 + i * .2625; line(540, 1900, 540 + Math.sin(a) * 2600, 1900 - Math.cos(a) * 2600, i % 2 ? T.m : T.c, 5, 30); } blob(540, 1900, 160, '255,255,255', .9); }
+  if (id === 'spot') { [[200, T.rgb('c')], [540, T.rgb('y')], [880, T.rgb('m')]].forEach(([x, col], i) => { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, `rgba(${col},.55)`); gr.addColorStop(.85, `rgba(${col},0)`); g.save(); g.translate(x, -40); g.rotate((i - 1) * .22); g.fillStyle = gr; g.beginPath(); g.moveTo(-40, 0); g.lineTo(40, 0); g.lineTo(420, H + 100); g.lineTo(-420, H + 100); g.closePath(); g.fill(); g.restore(); }); blob(540, 1900, 600, T.rgb('y'), .5); }
+  if (id === 'circuit') { for (let i = 0; i < 26; i++) { let x = Math.round(rnd() * 27) * 40, y = Math.round(rnd() * 48) * 40; g.save(); g.strokeStyle = `rgba(${T.rgb('c')},.35)`; g.lineWidth = 4; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 5; k++) { if (k % 2) y += (rnd() < .5 ? -1 : 1) * (80 + rnd() * 260); else x += (rnd() < .5 ? -1 : 1) * (60 + rnd() * 200); g.lineTo(x, y); } g.stroke(); g.fillStyle = i % 3 ? T.c : T.m; g.shadowColor = g.fillStyle; g.shadowBlur = 20; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); g.restore(); } }
+  if (id === 'stick') { blob(540, 0, 900, T.rgb('m'), .5); const cols = ['c', 'm', 'y', 'v']; [[1500, 12, 70, 9], [1700, 9, 100, 12], [1900, 6, 140, 16]].forEach(([y, n, len, w], r) => { for (let i = 0; i < n; i++) { const x = (i + .5 + (r % 2) * .3) / n * W, a = Math.sin(i * 1.7 + r) * .45; line(x, y, x + Math.sin(a) * len, y - Math.cos(a) * len, `rgba(${T.rgb(cols[(i + r) % 4])},1)`, w, 30); g.fillStyle = 'rgba(0,0,0,.6)'; g.beginPath(); g.ellipse(x, y + len * .5, len * .35, len * .45, 0, 0, 7); g.fill(); } }); }
+}
+async function drawTicket(s, id) {
+  await document.fonts.ready;
+  const W = 1080, H = 1920, T = themeVars(id), name = TICKETS.find((t) => t[0] === id)[1];
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  g.fillStyle = T.base; g.fillRect(0, 0, W, H); motif(g, id, T, W, H);
+  // 票卡（另一層畫好再挖缺口）
+  const L = document.createElement('canvas'); L.width = W; L.height = H; const t = L.getContext('2d');
+  const x = 120, y = 190, w = 840, h = 1520, cut = y + 1010, R = id === 'grid' || id === 'circuit' ? 14 : 52;
+  t.save(); t.shadowColor = T.c; t.shadowBlur = 60; rr(t, x, y, w, h, R);
+  const ch = t.createLinearGradient(x, y, x + w, y + h); [['#ffffff', 0], ['#8d94a0', .16], [T.c2, .3], ['#eef1f6', .44], ['#4d535e', .6], [T.m2, .76], ['#f1f4f8', 1]].forEach(([c, o]) => ch.addColorStop(o, c));
+  t.fillStyle = ch; t.fill(); t.restore();
+  t.save(); rr(t, x + 7, y + 7, w - 14, h - 14, Math.max(8, R - 6)); t.clip();
+  const ig = t.createLinearGradient(0, y, 0, y + h); ig.addColorStop(0, T.card1); ig.addColorStop(.75, T.card2); t.fillStyle = ig; t.fillRect(x, y, w, h);
+  t.globalAlpha = .22; motif(t, id, T, W, H); t.globalAlpha = 1;          // 票面底紋：同主題圖樣淡淡印在票上
+  t.restore();
+  // 封面
+  const ph = coverPhoto(s); const img = ph && P.url(ph.id) ? await loadImg(P.url(ph.id)) : null;
+  const cx0 = x + 36, cy0 = y + 100, cw = w - 72, chh = 540;
+  t.save(); rr(t, cx0, cy0, cw, chh, Math.max(8, R - 24)); t.clip();
+  if (img) drawCover(t, img, cx0, cy0, cw, chh);
+  else {
+    t.fillStyle = T.card2; t.fillRect(cx0, cy0, cw, chh);
+    [[cx0 + cw * .75, cy0 + chh * .3, T.rgb('m')], [cx0 + cw * .2, cy0 + chh * .85, T.rgb('c')]].forEach(([gx, gy, col]) => { const gr = t.createRadialGradient(gx, gy, 0, gx, gy, 480); gr.addColorStop(0, `rgba(${col},.85)`); gr.addColorStop(1, `rgba(${col},0)`); t.fillStyle = gr; t.fillRect(cx0, cy0, cw, chh); });
+    t.fillStyle = 'rgba(255,255,255,.94)'; t.font = `800 84px ${FS.u}`; t.shadowColor = T.c; t.shadowBlur = 24;
+    const ls = wrapLines(t, s.artist.toUpperCase(), cw - 80, 3); ls.forEach((l, i) => t.fillText(l, cx0 + 40, cy0 + chh - 44 - (ls.length - 1 - i) * 96)); t.shadowBlur = 0;
+  }
+  t.restore();
+  // 頂列
+  t.font = `600 26px ${FS.m}`; t.fillStyle = T.c; t.fillText('NEON//LIVE', x + 40, y + 66);
+  t.textAlign = 'right'; t.fillStyle = T.mut; t.fillText(`${name} · No.${s.id.slice(-6).toUpperCase()}`, x + w - 40, y + 66); t.textAlign = 'left';
+  // 標題
+  let ty = y + 720;
+  t.font = `600 30px ${FS.m}`; t.fillStyle = T.c; t.fillText(wrapLines(t, `${CATS[s.cat] || '演唱會'} · ${s.artist}`, w - 80, 1)[0], x + 40, ty);
+  t.font = `800 64px ${FS.s}`; t.fillStyle = '#ffffff';
+  for (const l of wrapLines(t, s.tour ? `${s.artist} - ${s.tour}` : s.artist, w - 80, 3)) { ty += 78; t.fillText(l, x + 40, ty); }
+  // 撕線
+  t.setLineDash([18, 14]); t.strokeStyle = 'rgba(255,255,255,.3)'; t.lineWidth = 4; t.beginPath(); t.moveTo(x + 56, cut); t.lineTo(x + w - 56, cut); t.stroke(); t.setLineDash([]);
+  // 下半資訊：日期、場館、座位／狀態／評分、條碼
+  t.font = `700 80px ${FS.m}`; t.fillStyle = T.y; t.shadowColor = T.y; t.shadowBlur = 18; t.fillText(s.date.replace(/-/g, '.'), x + 40, cut + 110); t.shadowBlur = 0;
+  t.font = `600 30px ${FS.m}`; t.fillStyle = T.mut; t.textAlign = 'right'; t.fillText(s.time ? `${s.time} 開演` : '', x + w - 40, cut + 104); t.textAlign = 'left';
+  t.font = `700 38px ${FS.s}`; t.fillStyle = '#eef1f6'; t.fillText(wrapLines(t, `◉ ${s.venue || '場館未定'}${s.city ? '・' + s.city : ''}`, w - 80, 1)[0], x + 40, cut + 180);
+  const cell = (lx, lab, val) => { t.font = `600 24px ${FS.m}`; t.fillStyle = T.mut; t.fillText(lab, lx, cut + 250); t.font = `700 34px ${FS.s}`; t.fillStyle = '#eef1f6'; t.fillText(wrapLines(t, val || '—', 240, 1)[0] || '—', lx, cut + 296); };
+  cell(x + 40, 'SEAT', s.seat); cell(x + 320, 'STATUS', P.STATUS[s.status]); cell(x + 580, 'RATING', s.rating ? '★'.repeat(s.rating) : '—');
+  bars(t, x + 40, cut + 350, w - 80, 110, s.id + id, 'rgba(238,241,246,.85)');
+  const hol = t.createLinearGradient(0, y, 0, y + h); [T.c, T.m, T.y, T.g, T.c].forEach((c, i) => hol.addColorStop(i / 4, c)); t.fillStyle = hol; t.globalAlpha = .85; t.fillRect(x + w - 18, y + 60, 8, h - 120); t.globalAlpha = 1;
+  // 缺口
+  t.globalCompositeOperation = 'destination-out'; [x, x + w].forEach((nx) => { t.beginPath(); t.arc(nx, cut, 38, 0, 7); t.fill(); }); t.globalCompositeOperation = 'source-over';
+  g.drawImage(L, 0, 0);
+  g.font = `600 26px ${FS.m}`; g.fillStyle = 'rgba(255,255,255,.75)'; g.textAlign = 'center'; g.fillText(`${name} EDITION · MY CONCERT LOG`, W / 2, H - 90); g.textAlign = 'left';
+  return cv.toDataURL('image/jpeg', .92);
+}
+
+/* ---- 票根選擇器 ---- */
+const TV = { id: null, idx: 0, urls: [], styles: [] };
+const tvTrack = document.getElementById('tvTrack');
+async function openTicket(id) {
+  closeMenu();
+  const s = P.get(id); TV.id = id;
+  TV.styles = [...TICKETS.map(([k, n]) => ({ k, n })), { k: 'receipt', n: '熱感收據' }, { k: 'cd', n: 'CD 封面' }];
+  TV.urls = Array(TV.styles.length).fill('');
+  TV.idx = Math.floor(Math.random() * TICKETS.length);         // 隨機套用一種主題風格
+  tvTrack.innerHTML = TV.styles.map((st, i) => `<div class="tvs" data-i="${i}"><div class="tvimg"><span>產生中…</span></div><b>${st.n}</b></div>`).join('');
+  document.getElementById('ticketView').classList.add('on');
+  requestAnimationFrame(() => tvGo(TV.idx, false));
+  const order = [TV.idx, ...TV.styles.map((_, i) => i).filter((i) => i !== TV.idx)];
+  for (const i of order) {
+    if (TV.id !== id) return;
+    const st = TV.styles[i];
+    TV.urls[i] = st.k === 'receipt' || st.k === 'cd' ? await drawCard(s, st.k) : await drawTicket(s, st.k);
+    const box = tvTrack.children[i]?.querySelector('.tvimg'); if (box) box.innerHTML = `<img src="${TV.urls[i]}" alt="${esc(s.artist)} 的${st.n}數位票根">`;
+  }
+}
+function tvGo(i, smooth = true) {
+  const n = TV.styles.length; TV.idx = (i + n) % n;
+  const el = tvTrack.children[TV.idx]; if (el) tvTrack.scrollTo({ left: el.offsetLeft - (tvTrack.clientWidth - el.offsetWidth) / 2, behavior: smooth ? 'smooth' : 'auto' });
+  tvSync();
+}
+function tvSync() {
+  document.getElementById('tvCount').textContent = `${TV.idx + 1} / ${TV.styles.length}`;
+  document.getElementById('tvDots').innerHTML = TV.styles.map((_, i) => `<i class="${i === TV.idx ? 'on' : ''}"></i>`).join('');
+}
+tvTrack.addEventListener('scroll', () => {
+  const mid = tvTrack.scrollLeft + tvTrack.clientWidth / 2; let best = 0, d = Infinity;
+  [...tvTrack.children].forEach((c, i) => { const k = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (k < d) { d = k; best = i; } });
+  if (best !== TV.idx) { TV.idx = best; tvSync(); }
+}, { passive: true });
+const tvName = () => `${P.get(TV.id).artist}-${TV.styles[TV.idx].n}.jpg`;
+async function tvFile() { if (!TV.urls[TV.idx]) { P.toast('還在產生，請稍等'); return null; } const b = await (await fetch(TV.urls[TV.idx])).blob(); return new File([b], tvName(), { type: 'image/jpeg' }); }
+document.getElementById('tvPrev').addEventListener('click', () => tvGo(TV.idx - 1));
+document.getElementById('tvNext').addEventListener('click', () => tvGo(TV.idx + 1));
+document.getElementById('tvRand').addEventListener('click', () => { let i; do i = Math.floor(Math.random() * TICKETS.length); while (i === TV.idx); tvGo(i); });
+document.getElementById('tvClose').addEventListener('click', () => { TV.id = null; document.getElementById('ticketView').classList.remove('on'); });
+document.getElementById('tvSave').addEventListener('click', async () => {
+  const f = await tvFile(); if (!f) return;
+  if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); return; } catch (err) { if (err.name === 'AbortError') return; } }   // iPhone 分享選單裡選「儲存影像」
+  const a = document.createElement('a'); a.href = TV.urls[TV.idx]; a.download = tvName(); a.click(); P.toast('圖片已儲存');
+});
+document.getElementById('tvShare').addEventListener('click', async () => {
+  const f = await tvFile(); if (!f) return;
+  if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: P.get(TV.id).artist }); } catch (err) { /* 取消 */ } }
+  else { const a = document.createElement('a'); a.href = TV.urls[TV.idx]; a.download = tvName(); a.click(); P.toast('此瀏覽器不支援分享，已改為下載'); }
+});
+
 /* ================= 事件 ================= */
 document.querySelector('.app').addEventListener('click', (e) => {
   const t = e.target;
@@ -1356,7 +1656,10 @@ document.querySelector('.app').addEventListener('click', (e) => {
   const vn = t.closest('[data-venue]'); if (vn) { document.getElementById('q').value = vn.dataset.venue; P.go('archive'); renderArchive(); return; }
   const ic = t.closest('[data-ics]'); if (ic) { const [id, k] = ic.dataset.ics.split(':'); addToCalendar(id, k); return; }
   const ad = t.closest('[data-advance]'); if (ad) { const [id, st] = ad.dataset.advance.split(':'); advance(id, st); return; }
-  const sh = t.closest('[data-share]'); if (sh) { openShare(sh.dataset.share); return; }
+  if (!t.closest('#actMenu') && !t.closest('[data-menu]')) closeMenu();
+  const mn = t.closest('[data-menu]'); if (mn) { const m = document.getElementById('actMenu'); if (!m.hidden && menuId === mn.dataset.menu) closeMenu(); else openMenu(mn.dataset.menu, mn); return; }
+  const act = t.closest('[data-act]'); if (act) { const id = menuId; closeMenu(); ({ ticket: () => openTicket(id), edit: () => openEditor(id), dup: () => duplicate(id), del: () => deleteShow(id) })[act.dataset.act](); return; }
+  const sh = t.closest('[data-share]'); if (sh) { openTicket(sh.dataset.share); return; }
   const dt = t.closest('[data-dtab]'); if (dt) { dtab = dt.dataset.dtab; detail(dId); return; }
   const ph = t.closest('[data-photo]'); if (ph) { const lb = document.getElementById('lb'); lb.querySelector('img').src = ph.dataset.photo; lb.classList.add('on'); return; }
   if (t.closest('#lb')) { document.getElementById('lb').classList.remove('on'); return; }
