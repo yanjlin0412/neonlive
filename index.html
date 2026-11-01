@@ -237,11 +237,11 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 .bgpick .sw3{position:absolute;left:10px;top:10px;display:flex;gap:4px}.bgpick .sw3 i{width:12px;height:12px;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
 .bgpick button[aria-pressed=true]{border-color:#fff;box-shadow:0 0 16px rgba(var(--c-rgb),.5)}
 .bgpick button[aria-pressed=true]::after{content:"使用中";position:absolute;top:8px;right:8px;font-size:10px;padding:2px 6px;border-radius:8px;background:#fff;color:#0a0a0a;text-shadow:none}
-.sheet .panel{background:linear-gradient(180deg,#121626,#08090f);border-radius:28px 28px 0 0;padding:10px 20px;box-shadow:0 -1px 0 rgba(var(--c-rgb),.5),0 -20px 60px rgba(var(--c-rgb),.12)}
+.sheet .panel{background:linear-gradient(180deg,var(--card1),var(--card2));border-radius:28px 28px 0 0;padding:10px 20px;box-shadow:0 -1px 0 rgba(var(--c-rgb),.5),0 -20px 60px rgba(var(--c-rgb),.12)}
 .grab{width:40px;height:5px;border-radius:3px;background:#3a4357;margin:0 auto 10px}
 .f{display:flex;flex-direction:column;gap:12px}
 .f label{display:flex;flex-direction:column;gap:6px;font:11px "JetBrains Mono",monospace;letter-spacing:.14em;color:var(--c)}
-.f input,.f textarea,.f select{min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(5,6,10,.7);color:#eef1f6;font-family:-apple-system,"PingFang TC",sans-serif;letter-spacing:0;-webkit-appearance:none;appearance:none;width:100%}
+.f input,.f textarea,.f select{min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(var(--panel-rgb),.75);color:#eef1f6;font-family:-apple-system,"PingFang TC",sans-serif;letter-spacing:0;-webkit-appearance:none;appearance:none;width:100%}
 .f input:focus,.f textarea:focus,.f select:focus{outline:0;border-color:var(--c);box-shadow:0 0 16px rgba(var(--c-rgb),.3)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .three{display:grid;grid-template-columns:1.4fr .8fr 1fr;gap:8px}
@@ -398,21 +398,29 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 .actmenu button:active,.actmenu button:focus-visible{background:rgba(255,255,255,.08)}
 .actmenu .danger{color:#ff6b81}
 /* ============ 數位票根選擇器 ============ */
-.f .datebtn{min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(5,6,10,.7);color:#eef1f6;font:16px -apple-system,"PingFang TC",sans-serif;letter-spacing:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.datepick{position:absolute;inset:0;z-index:70;display:none}
-.datepick.on{display:block}
-.datepick>.scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);animation:fd .2s}
-.datepick .dp{position:absolute;left:0;right:0;bottom:0;padding:16px 20px max(env(safe-area-inset-bottom),20px);border-radius:28px 28px 0 0;background:linear-gradient(180deg,#151a2c,#0a0b12);box-shadow:0 -1px 0 rgba(var(--c-rgb),.5),0 -20px 60px rgba(var(--c-rgb),.15);animation:up .3s cubic-bezier(.2,.8,.2,1)}
-.dphd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-.dphd b{font:700 18px -apple-system,"PingFang TC",sans-serif;color:#eef1f6}
-.dphd button{min-height:44px;padding:0 14px;border-radius:22px;font:600 15px -apple-system,"PingFang TC",sans-serif}
-.dphd .today{color:var(--c);border:1px solid rgba(var(--c-rgb),.5)}
-.wheels{position:relative;display:grid;grid-template-columns:1.3fr 1fr 1fr;height:220px;-webkit-mask:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
-.wheels::before{content:"";position:absolute;left:0;right:0;top:90px;height:40px;border-radius:12px;background:rgba(var(--c-rgb),.14);border:1px solid rgba(var(--c-rgb),.4);pointer-events:none}
+.f select{display:none}
+.f .pickbtn{position:relative;min-height:48px;padding:12px 34px 12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(var(--panel-rgb),.75);color:#eef1f6;font:15px -apple-system,"PingFang TC",sans-serif;letter-spacing:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f .pickbtn::after{content:"";position:absolute;right:14px;top:50%;width:7px;height:7px;margin-top:-6px;border:solid var(--c);border-width:0 2px 2px 0;transform:rotate(45deg);opacity:.85}
+.f .pickbtn.empty{color:#6b7385}
+.f .pickbtn:focus-visible,.f .pickbtn.on{outline:0;border-color:var(--c);box-shadow:0 0 16px rgba(var(--c-rgb),.3)}
+.picker{position:absolute;inset:0;z-index:70;display:none}
+.picker.on{display:block}
+.picker>.scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);animation:fd .2s}
+.picker .pk{position:absolute;left:0;right:0;bottom:0;padding:10px 20px max(env(safe-area-inset-bottom),20px);border-radius:28px 28px 0 0;background:linear-gradient(180deg,var(--card1),var(--card2));box-shadow:0 -1px 0 rgba(var(--c-rgb),.55),0 -20px 60px rgba(var(--c-rgb),.16);animation:up .3s cubic-bezier(.2,.8,.2,1)}
+.pkhd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 8px}
+.pkhd small{display:block;font:11px "JetBrains Mono",monospace;letter-spacing:.16em;color:var(--c)}
+.pkhd b{display:block;font:700 19px -apple-system,"PingFang TC",sans-serif;color:#eef1f6;margin-top:2px}
+.pkhd span{display:flex;gap:8px}
+.pkhd button{min-height:40px;padding:0 14px;border-radius:20px;font:600 14px -apple-system,"PingFang TC",sans-serif;color:var(--c);border:1px solid rgba(var(--c-rgb),.5)}
+.pkhd button[hidden]{display:none}
+.pkhd .pkclear{color:var(--mut);border-color:rgba(255,255,255,.18)}
+.wheels{position:relative;display:grid;height:220px;-webkit-mask:linear-gradient(transparent,#000 28%,#000 72%,transparent);mask:linear-gradient(transparent,#000 28%,#000 72%,transparent)}
+.wheels::before{content:"";position:absolute;left:0;right:0;top:90px;height:40px;border-radius:12px;background:rgba(var(--c-rgb),.14);border:1px solid rgba(var(--c-rgb),.45);box-shadow:0 0 18px rgba(var(--c-rgb),.18);pointer-events:none}
 .wheel{overflow-y:auto;scroll-snap-type:y mandatory;padding:90px 0;scrollbar-width:none;overscroll-behavior:contain}
 .wheel::-webkit-scrollbar{display:none}
-.wheel div{height:40px;line-height:40px;text-align:center;scroll-snap-align:center;font:600 20px -apple-system,"PingFang TC",sans-serif;color:#eef1f6}
-.dpok{display:block;width:100%;margin-top:14px}
+.wheel div{height:40px;line-height:40px;text-align:center;scroll-snap-align:center;font:600 19px -apple-system,"PingFang TC",sans-serif;color:#eef1f6;white-space:nowrap}
+.wheels.many .wheel div{font-size:17px}
+.pkok{display:block;width:100%;margin-top:12px}
 .ticketview{position:absolute;inset:0;z-index:88;display:none;flex-direction:column;background:rgba(var(--panel-rgb),.97);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);padding:max(env(safe-area-inset-top),20px) 0 max(env(safe-area-inset-bottom),18px)}
 .ticketview.on{display:flex}
 .tvhd{display:flex;justify-content:space-between;align-items:center;padding:0 16px 8px}
@@ -498,8 +506,8 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
         <label>巡演名稱<input name="tour"></label>
         <label class="coverpick"><span class="pv" id="coverPv" aria-hidden="true">＋</span><span><b style="display:block;color:#eef1f6;font:700 14px -apple-system,'PingFang TC',sans-serif">票面封面照片</b><span style="color:var(--mut);font:12px -apple-system,'PingFang TC',sans-serif;letter-spacing:0">選一張現場照或海報，會顯示在票卡上</span></span><input type="file" name="cover" accept="image/*" hidden id="coverIn"></label>
         <label>活動類型<select name="cat"><option value="concert">演唱會</option><option value="fest">音樂祭</option><option value="fanmeet">見面會</option><option value="musical">音樂劇</option><option value="other">其他</option></select></label>
-        <div class="two"><label>狀態<select name="status"><option value="">依日期自動</option><option value="wish">想看</option><option value="presale">等開賣</option><option value="going">已購票</option><option value="attended">已參加</option></select></label><label>開賣時間<input name="sale" type="datetime-local"></label></div>
-        <div class="two"><label>日期 *<input name="date" type="hidden"><button type="button" class="datebtn" id="dateBtn"></button></label><label>時間<input name="time" type="time"></label></div>
+        <div class="two"><label>狀態<select name="status"><option value="">依日期自動</option><option value="wish">想看</option><option value="presale">等開賣</option><option value="going">已購票</option><option value="attended">已參加</option></select></label><label>開賣時間<input name="sale" type="hidden"></label></div>
+        <div class="two"><label>日期 *<input name="date" type="hidden"></label><label>時間<input name="time" type="hidden"></label></div>
         <div class="two"><label>場館<input name="venue" placeholder="輸入關鍵字，例：巨蛋"></label><label>座位<input name="seat"></label></div>
         <div class="vsug" id="venueSug" role="listbox" aria-label="場館建議" hidden></div>
         <div class="three">
@@ -541,12 +549,13 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
     <button role="menuitem" data-act="dup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>複製演唱會</button>
     <button role="menuitem" data-act="del" class="danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>刪除演唱會</button>
   </div>
-  <div class="datepick" id="datePick" role="dialog" aria-modal="true" aria-label="選擇日期">
-    <div class="scrim" data-dpclose></div>
-    <div class="dp">
-      <div class="dphd"><b id="dpLabel"></b><span style="display:flex;gap:8px"><button type="button" class="today" id="dpToday">今天</button></span></div>
-      <div class="wheels"><div class="wheel" id="wY" aria-label="年"></div><div class="wheel" id="wM" aria-label="月"></div><div class="wheel" id="wD" aria-label="日"></div></div>
-      <button type="button" class="cbtn dpok" id="dpOk">完成</button>
+  <div class="picker" id="picker" role="dialog" aria-modal="true" aria-labelledby="pkLabel">
+    <div class="scrim" data-pkclose></div>
+    <div class="pk">
+      <div class="grab"></div>
+      <div class="pkhd"><div><small id="pkTitle"></small><b id="pkLabel"></b></div><span><button type="button" class="pkclear" id="pkClear">清除</button><button type="button" id="pkNow">今天</button></span></div>
+      <div class="wheels" id="pkWheels"></div>
+      <button type="button" class="cbtn pkok" id="pkOk">完成</button>
     </div>
   </div>
   <section class="ticketview" id="ticketView" role="dialog" aria-modal="true" aria-label="數位票根">
@@ -1060,7 +1069,7 @@ function renderTodo() {
       <button class="chipbtn solid" data-advance="${s.id}:going">搶到了</button></div>`).join('')}</div></div>` : '';
   tickSale();
 }
-const tickSale = () => document.querySelectorAll('[data-sale]').forEach((el) => { const r = saleText(P.get(el.dataset.sale)); el.textContent = r.t; el.classList.toggle('live', r.live); });
+const tickSale = () => document.querySelectorAll('[data-sale]').forEach((el) => { const s = P.get(el.dataset.sale); if (!s) return; const r = saleText(s); el.textContent = r.t; el.classList.toggle('live', r.live); });
 setInterval(tickSale, 1000);
 
 const row = (s) => { const p = P.parts(s.date); return `
@@ -1309,7 +1318,7 @@ function openEditor(id) {
   coverPv.style.backgroundImage = cp ? `url('${P.url(cp.id)}')` : ''; coverPv.textContent = cp ? '' : '＋';
   document.getElementById('edTitle').textContent = s ? 'EDIT.ENTRY' : 'NEW.ENTRY';
   document.getElementById('edDel').hidden = !s;
-  calc(); syncDate();
+  calc(); syncPicks();
   P.sheet('add', true);
   ed.closest('.panel').scrollTop = 0;
 }
@@ -1509,50 +1518,111 @@ function openMenu(id, btn) {
 }
 const closeMenu = () => { document.getElementById('actMenu').hidden = true; };
 let copyFrom = null;
-// 日期：年／月／日三個滾輪一次選完（取代 iOS 內建要分兩段選的日期選單）
-const dateLabel = (v) => { if (!v) return '選擇日期'; const p = P.parts(v); return `${p.y}年${+p.m}月${+p.d}日 週${p.wk}`; };
-function syncDate() { document.getElementById('dateBtn').textContent = dateLabel(F('date').value); }
-const DP = { y: 0, m: 0, d: 0 }, IH = 40, wY = document.getElementById('wY'), wM = document.getElementById('wM'), wD = document.getElementById('wD');
-const YEARS = (() => { const a = [], ny = +P.today.slice(0, 4); for (let y = 1990; y <= ny + 5; y++) a.push(y); return a; })();
+// 統一的滾輪選擇器：日期、時間、開賣時間、下拉選單都用同一個，配色吃主題變數，換主題會跟著變
+const IH = 40, pkEl = document.getElementById('picker'), pkW = document.getElementById('pkWheels');
+const range = (a, b, st = 1) => { const r = []; for (let v = a; v <= b; v += st) r.push(v); return r; };
+const YEARS = range(1990, +P.today.slice(0, 4) + 5);
 const dim = (y, m) => new Date(y, m, 0).getDate();
-const fillWheel = (w, vals, suf) => { w.innerHTML = vals.map((v) => `<div>${v}${suf}</div>`).join(''); };
-const dpValue = () => `${DP.y}-${P.pad(DP.m)}-${P.pad(DP.d)}`;
-function dpLabel() { document.getElementById('dpLabel').textContent = dateLabel(dpValue()); }
-function dpDays() {   // 換年月時重排天數（2 月、小月）
-  const n = dim(DP.y, DP.m); if (wD.children.length !== n) fillWheel(wD, Array.from({ length: n }, (_, i) => i + 1), '日');
-  if (DP.d > n) DP.d = n;
+const dateLabel = (v) => { const p = P.parts(v); return `${p.y}年${+p.m}月${+p.d}日 週${p.wk}`; };
+let PK = null;
+const pkVals = () => PK.cols.map((c) => c.vals[c.i]);
+const pkFill = (c) => { c.el.innerHTML = c.vals.map((v) => `<div>${c.txt(v)}</div>`).join(''); };
+const pkLabel = () => { document.getElementById('pkLabel').textContent = PK.label(pkVals()); };
+const pkScroll = (smooth) => { for (const c of PK.cols) c.el.scrollTo({ top: c.i * IH, behavior: smooth ? 'smooth' : 'instant' }); };
+function pkSet(vals) {   // 依值把每一欄轉到對的位置
+  PK.cols.forEach((c, k) => { const i = c.vals.indexOf(vals[k]); if (i >= 0) c.i = i; if (k === 1 && PK.fix) PK.fix(); });
+  PK.fix?.(); pkLabel(); pkScroll(true);
 }
-function dpScroll(smooth) {
-  const b = smooth ? 'smooth' : 'instant';
-  wY.scrollTo({ top: YEARS.indexOf(DP.y) * IH, behavior: b }); wM.scrollTo({ top: (DP.m - 1) * IH, behavior: b }); wD.scrollTo({ top: (DP.d - 1) * IH, behavior: b });
+function pkOpen(o) {   // o: { title, cols:[{vals, txt, i, w}], label(vals), done(vals), fix?, now?, clear? }
+  PK = o; pkW.innerHTML = ''; pkW.style.gridTemplateColumns = o.cols.map((c) => c.w || '1fr').join(' '); pkW.classList.toggle('many', o.cols.length > 3);
+  for (const c of o.cols) {
+    c.el = document.createElement('div'); c.el.className = 'wheel'; pkFill(c); pkW.append(c.el);
+    let t;
+    c.el.addEventListener('scroll', () => {
+      const i = Math.max(0, Math.min(c.vals.length - 1, Math.round(c.el.scrollTop / IH)));
+      if (i === c.i) return; c.i = i; PK.fix?.(); pkLabel();
+      clearTimeout(t); t = setTimeout(() => { for (const d of PK.cols) if (Math.round(d.el.scrollTop / IH) !== d.i) d.el.scrollTo({ top: d.i * IH, behavior: 'smooth' }); }, 150);
+    }, { passive: true });
+    c.el.addEventListener('click', (e) => { const it = e.target.closest('.wheel>div'); if (it) c.el.scrollTo({ top: [...c.el.children].indexOf(it) * IH, behavior: 'smooth' }); });   // 點一下也能選
+  }
+  document.getElementById('pkTitle').textContent = o.title;
+  document.getElementById('pkNow').hidden = !o.now; document.getElementById('pkNow').textContent = o.nowText || '今天';
+  document.getElementById('pkClear').hidden = !o.clear;
+  pkEl.classList.add('on'); pkLabel();
+  requestAnimationFrame(() => pkScroll(false));
 }
-function openDate() {
-  const [y, m, d] = (F('date').value || P.today).split('-').map(Number);
-  Object.assign(DP, { y: Math.min(Math.max(y, YEARS[0]), YEARS.at(-1)), m, d });
-  fillWheel(wY, YEARS, '年'); fillWheel(wM, Array.from({ length: 12 }, (_, i) => i + 1), '月'); dpDays();
-  document.getElementById('datePick').classList.add('on'); dpLabel();
-  requestAnimationFrame(() => dpScroll(false));
+const pkClose = () => { pkEl.classList.remove('on'); document.querySelectorAll('.pickbtn.on').forEach((b) => b.classList.remove('on')); };
+document.getElementById('pkOk').addEventListener('click', () => { PK.done(pkVals()); pkClose(); });
+document.getElementById('pkNow').addEventListener('click', () => pkSet(PK.now()));
+document.getElementById('pkClear').addEventListener('click', () => { PK.clear(); pkClose(); });
+document.querySelector('[data-pkclose]').addEventListener('click', pkClose);
+
+// 各欄位的滾輪組合
+const dateCols = (y, m, d) => [
+  { vals: YEARS, txt: (v) => v + '年', i: Math.max(0, YEARS.indexOf(y)), w: '1.3fr' },
+  { vals: range(1, 12), txt: (v) => v + '月', i: m - 1 },
+  { vals: range(1, dim(y, m)), txt: (v) => v + '日', i: d - 1 }];
+function fixDays() {   // 換年月時重排天數（2 月、小月）
+  const [yc, mc, dc] = PK.cols, n = dim(yc.vals[yc.i], mc.vals[mc.i]);
+  if (dc.vals.length !== n) { dc.vals = range(1, n); dc.i = Math.min(dc.i, n - 1); pkFill(dc); dc.el.scrollTop = dc.i * IH; }
 }
-const closeDate = () => document.getElementById('datePick').classList.remove('on');
-for (const [w, key] of [[wY, 'y'], [wM, 'm'], [wD, 'd']]) {
-  let t;
-  w.addEventListener('scroll', () => {
-    const i = Math.max(0, Math.min(w.children.length - 1, Math.round(w.scrollTop / IH)));
-    DP[key] = key === 'y' ? YEARS[i] : i + 1;
-    if (key !== 'd') dpDays();
-    dpLabel();
-    clearTimeout(t); t = setTimeout(() => { if (key !== 'd') wD.scrollTo({ top: (DP.d - 1) * IH }); }, 120);
-  }, { passive: true });
-  w.addEventListener('click', (e) => { const it = e.target.closest('.wheel>div'); if (it) w.scrollTo({ top: [...w.children].indexOf(it) * IH, behavior: 'smooth' }); });   // 點一下也能選
+const MINS = range(0, 55, 5);
+const timeCols = (h, mi) => { const ms = MINS.includes(mi) ? MINS : [...MINS, mi].sort((a, b) => a - b); return [
+  { vals: range(0, 23), txt: (v) => P.pad(v) + ' 時', i: h },
+  { vals: ms, txt: (v) => P.pad(v) + ' 分', i: ms.indexOf(mi) }]; };
+const nowYMD = () => P.today.split('-').map(Number);
+const saleLabel = (v) => { const [d, t] = v.split('T'); const p = P.parts(d); return `${p.y}年${+p.m}月${+p.d}日 ${t.slice(0, 5)}`; };
+const PICKS = {
+  date: {
+    show: (v) => { if (!v) return '選擇日期'; const p = P.parts(v); return `${p.y}年${+p.m}月${+p.d}日（${p.wk}）`; },
+    open(v) {
+      const [y, m, d] = (v || P.today).split('-').map(Number);
+      return { title: '日期', cols: dateCols(y, m, d), fix: fixDays, now: nowYMD,
+        label: ([y, m, d]) => dateLabel(`${y}-${P.pad(m)}-${P.pad(d)}`), done: ([y, m, d]) => `${y}-${P.pad(m)}-${P.pad(d)}` };
+    }
+  },
+  time: {
+    show: (v) => v ? v.slice(0, 5) : '未設定',
+    open(v) {
+      const [h, mi] = (v || '19:30').split(':').map(Number);
+      return { title: '開演時間', cols: timeCols(h, mi), now: () => [19, 30], nowText: '19:30', clear: true,
+        label: ([h, m]) => `${P.pad(h)}:${P.pad(m)}`, done: ([h, m]) => `${P.pad(h)}:${P.pad(m)}` };
+    }
+  },
+  sale: {
+    show: (v) => { if (!v) return '未設定'; const p = P.parts(v.slice(0, 10)); return `${+p.m}月${+p.d}日 ${v.slice(11, 16)}`; },
+    open(v) {
+      const [d, t] = (v || P.today + 'T12:00').split('T'), [y, m, dd] = d.split('-').map(Number), [h, mi] = t.split(':').map(Number);
+      return { title: '開賣時間', cols: [...dateCols(y, m, dd).map((c, i) => ({ ...c, w: i ? '.85fr' : '1.25fr' })), ...timeCols(h, mi).map((c) => ({ ...c, txt: (v) => P.pad(v), w: '.75fr' }))],
+        fix: fixDays, now: () => [...nowYMD(), 12, 0], clear: true,
+        label: ([y, m, d, h, mi]) => saleLabel(`${y}-${P.pad(m)}-${P.pad(d)}T${P.pad(h)}:${P.pad(mi)}`), done: ([y, m, d, h, mi]) => `${y}-${P.pad(m)}-${P.pad(d)}T${P.pad(h)}:${P.pad(mi)}` };
+    }
+  }
+};
+const pickTitle = { cat: '活動類型', status: '狀態', cur: '幣別' };
+for (const name of ['cat', 'status', 'cur']) {   // 下拉選單也改成同款滾輪
+  const sel = F(name);
+  PICKS[name] = {
+    show: () => sel.selectedOptions[0]?.textContent || '',
+    open: () => ({ title: pickTitle[name], cols: [{ vals: [...sel.options].map((o) => o.value), txt: (v) => [...sel.options].find((o) => o.value === v).textContent, i: Math.max(0, sel.selectedIndex) }],
+      label: ([v]) => [...sel.options].find((o) => o.value === v).textContent, done: ([v]) => v })
+  };
 }
-document.getElementById('dateBtn').addEventListener('click', openDate);
-document.getElementById('dpToday').addEventListener('click', () => { const [y, m, d] = P.today.split('-').map(Number); Object.assign(DP, { y, m, d }); dpDays(); dpLabel(); dpScroll(true); });
-document.getElementById('dpOk').addEventListener('click', () => { F('date').value = dpValue(); syncDate(); closeDate(); calc(); });
-document.querySelector('[data-dpclose]').addEventListener('click', closeDate);
+const pickBtns = {};
+for (const [name, cfg] of Object.entries(PICKS)) {
+  const el = F(name), b = document.createElement('button');
+  b.type = 'button'; b.className = 'pickbtn'; el.after(b); pickBtns[name] = b;
+  b.addEventListener('click', () => {
+    b.classList.add('on');
+    const o = cfg.open(el.value), set = (v) => { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); syncPicks(); };
+    pkOpen({ ...o, done: (vals) => set(o.done(vals)), clear: o.clear && (() => set('')) });
+  });
+}
+function syncPicks() { for (const [name, b] of Object.entries(pickBtns)) { const v = F(name).value; b.textContent = PICKS[name].show(v); b.classList.toggle('empty', !v && name !== 'status'); } }
 
 function duplicate(id) {
   const s = P.get(id); openEditor(id);
-  F('sid').value = ''; F('status').value = ''; copyFrom = s;   // 以原紀錄為底的新紀錄，狀態改回依日期自動判斷
+  F('sid').value = ''; F('status').value = ''; syncPicks(); copyFrom = s;   // 以原紀錄為底的新紀錄，狀態改回依日期自動判斷
   document.getElementById('edTitle').textContent = 'COPY.ENTRY';
   document.getElementById('edDel').hidden = true;
   P.toast('已複製內容，修改日期等資料後按儲存');
