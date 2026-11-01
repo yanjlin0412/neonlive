@@ -1,5 +1,5 @@
 // 離線快取：App 外殼採 cache-first，字型採 stale-while-revalidate
-const VERSION = 'neonlive-v6';
+const VERSION = 'neonlive-v7';
 const SHELL = [
   './',
   './index.html',
