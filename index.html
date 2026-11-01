@@ -240,6 +240,7 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 .sheet .panel{background:linear-gradient(180deg,var(--card1),var(--card2));border-radius:28px 28px 0 0;padding:10px 20px;box-shadow:0 -1px 0 rgba(var(--c-rgb),.5),0 -20px 60px rgba(var(--c-rgb),.12)}
 .grab{width:40px;height:5px;border-radius:3px;background:#3a4357;margin:0 auto 10px}
 .f{display:flex;flex-direction:column;gap:12px}
+.edhd{position:sticky;top:-10px;z-index:5;display:flex;justify-content:space-between;align-items:center;margin:-10px -20px 0;padding:10px 20px;background:rgba(var(--panel-rgb),.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(var(--c-rgb),.18)}   /* 取消／儲存固定在頂端 */
 .f label{display:flex;flex-direction:column;gap:6px;font:11px "JetBrains Mono",monospace;letter-spacing:.14em;color:var(--c)}
 .f input,.f textarea,.f select{min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(var(--panel-rgb),.75);color:#eef1f6;font-family:-apple-system,"PingFang TC",sans-serif;letter-spacing:0;-webkit-appearance:none;appearance:none;width:100%}
 .f input:focus,.f textarea:focus,.f select:focus{outline:0;border-color:var(--c);box-shadow:0 0 16px rgba(var(--c-rgb),.3)}
@@ -501,7 +502,7 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
       <div class="grab"></div>
       <form class="f" id="addf" novalidate>
         <input type="hidden" name="sid">
-        <div style="display:flex;justify-content:space-between;align-items:center"><button type="button" data-close style="min-height:44px;color:var(--mut)">取消</button><span class="kick" id="edTitle">NEW.ENTRY</span><button class="cbtn">儲存</button></div>
+        <div class="edhd"><button type="button" data-close style="min-height:44px;color:var(--mut)">取消</button><span class="kick" id="edTitle">NEW.ENTRY</span><button class="cbtn">儲存</button></div>
         <label>藝人 *<input name="artist" placeholder="例：DAY6"></label>
         <label>巡演名稱<input name="tour"></label>
         <label class="coverpick"><span class="pv" id="coverPv" aria-hidden="true">＋</span><span><b style="display:block;color:#eef1f6;font:700 14px -apple-system,'PingFang TC',sans-serif">票面封面照片</b><span style="color:var(--mut);font:12px -apple-system,'PingFang TC',sans-serif;letter-spacing:0">選一張現場照或海報，會顯示在票卡上</span></span><input type="file" name="cover" accept="image/*" hidden id="coverIn"></label>
