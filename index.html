@@ -170,7 +170,7 @@ input,textarea,select{font:inherit;font-size:16px;color:inherit}
 .tk .st{position:absolute;top:14px;left:16px;z-index:1;font:10px "JetBrains Mono",monospace;letter-spacing:.18em;padding:3px 7px;border:1px solid currentColor;background:rgba(0,0,0,.45)}
 .tk .px{position:absolute;top:12px;right:16px;z-index:1;font:600 12px "JetBrains Mono",monospace;color:var(--y);padding:3px 8px;border-radius:10px;background:rgba(0,0,0,.5)}
 .tk .day{position:absolute;left:16px;bottom:12px;z-index:1;font:800 48px/1 Unbounded,sans-serif;text-shadow:0 0 18px rgba(var(--c-rgb),.5)}
-.tk .day small{font:600 13px "JetBrains Mono",monospace;margin-left:8px;color:#c7d2e6;letter-spacing:.12em;text-shadow:none}
+.tk .day small{font:600 14px "JetBrains Mono","PingFang TC",monospace;margin-left:8px;color:#c7d2e6;letter-spacing:.06em;text-shadow:none}
 .tk .tear{display:block;border-top:2px dashed rgba(255,255,255,.22);margin:0 18px}
 .tk .mt{padding:14px 18px 0;display:flex;flex-direction:column;gap:4px}
 .tk .ar{font:800 20px Unbounded,-apple-system,"PingFang TC",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -590,7 +590,7 @@ const P = (() => {
     attended() { return sorted().filter((s) => s.status === 'attended'); },
     get(id) { return shows.find((s) => s.id === id); },
     next() { return shows.filter((s) => s.status === 'going' && s.date >= today).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0]; },
-    parts(date) { const [y, m, d] = date.split('-'); return { y, yy: y.slice(2), m, d, mon: MON[+m - 1], md: `${m}.${d}` }; },
+    parts(date) { const [y, m, d] = date.split('-'); return { y, yy: y.slice(2), m, d, mon: `${+m}月`, wk: '日一二三四五六'[new Date(+y, m - 1, +d).getDay()], md: `${m}.${d}` }; },
     stars(n) { return '★'.repeat(n || 0) + '☆'.repeat(5 - (n || 0)); },
     songs(s) { return s.setlist.length + s.encore.length; },
     countdown(s) {
@@ -930,7 +930,7 @@ async function drawCard(s, tpl) {
     if (s.price) { const tx = money(twd(s)); g.font = `600 34px ${FS.m}`; const pw = g.measureText(tx).width + 40; rr(g, x + w - 50 - pw, y + 48, pw, 64, 32); g.fillStyle = 'rgba(0,0,0,.55)'; g.fill(); g.fillStyle = Y; g.fillText(tx, x + w - 30 - pw, y + 81); }
     g.textBaseline = 'alphabetic';
     g.save(); g.shadowColor = C; g.shadowBlur = 30; g.fillStyle = '#fff'; g.font = `800 230px ${FS.u}`; g.fillText(p.d, x + 60, y + cut - 50); const dw = g.measureText(p.d).width; g.restore();
-    g.font = `600 44px ${FS.m}`; g.fillStyle = '#d6deee'; g.fillText(`${p.mon} ${p.y}`, x + 90 + dw, y + cut - 60);
+    g.font = `600 44px ${FS.m}`; g.fillStyle = '#d6deee'; g.fillText(`${p.y}年${p.mon} 週${p.wk}`, x + 90 + dw, y + cut - 60);
     // 撕線與缺口
     g.setLineDash([16, 12]); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 4; g.beginPath(); g.moveTo(x + 50, y + cut + 20); g.lineTo(x + w - 50, y + cut + 20); g.stroke(); g.setLineDash([]);
     g.save(); g.globalCompositeOperation = 'destination-out'; [x, x + w].forEach((cx) => { g.beginPath(); g.arc(cx, y + cut + 20, 34, 0, Math.PI * 2); g.fill(); }); g.restore();
@@ -1014,14 +1014,18 @@ function render() {
   renderTodo();
   const L = ledger();
   document.getElementById('money').innerHTML = `<span><small>今年票券</small><b>${Math.round(L.year).toLocaleString()}</b></span><span><small>平均每場</small><b>${Math.round(L.avg).toLocaleString()}</b></span><span><small>每首歌</small><b>${Math.round(L.perSong).toLocaleString()}</b></span>`;
-  document.getElementById('track').innerHTML = P.list().filter((s) => s.status === 'going' || s.status === 'attended').map((s) => { const p = P.parts(s.date); return `
+  const tl = P.list().filter((s) => s.status === 'going' || s.status === 'attended').reverse();   // 依日期由舊到新排
+  document.getElementById('track').innerHTML = tl.map((s) => { const p = P.parts(s.date); return `
     <button class="tk" data-open="${s.id}" aria-label="${esc(s.artist)}"><span class="in">
-      <span class="art" style="background:${cover(s)}"><span class="st ${ST[s.status]}">${P.STATUS_EN[s.status]}</span>${s.price ? `<span class="px">${money(twd(s))}</span>` : ''}<span class="day">${p.d}<small>${p.mon} ${p.y}</small></span></span>
+      <span class="art" style="background:${cover(s)}"><span class="st ${ST[s.status]}">${P.STATUS_EN[s.status]}</span>${s.price ? `<span class="px">${money(twd(s))}</span>` : ''}<span class="day">${p.d}<small>${p.y}年${p.mon} 週${p.wk}</small></span></span>
       <span class="tear"></span>
       <span class="mt"><span class="ar">${esc(s.artist)}</span><span style="font-size:13px;color:var(--mut)">${esc(s.tour)}</span><span class="mono" style="font-size:12px;color:#c7d2e6;margin-top:4px">◉ ${esc(s.venue)}${s.seat ? ' · ' + esc(s.seat) : ''}</span></span>
       <span class="ft"><span class="mono y" style="font-size:13px;letter-spacing:1px">${s.rating ? P.stars(s.rating) : s.status === 'presale' ? '等開賣' : 'T−' + +P.countdown(s).d + ' DAYS'}</span><span class="bc"></span></span>
       <span class="holo"></span></span></button>`; }).join('');
-  refresh = P.coverflow(document.getElementById('track'), document.getElementById('dots'));
+  const track = document.getElementById('track');
+  const now = (i => track.children[i < 0 ? tl.length - 1 : i])(tl.findIndex((s) => s.date >= P.today));   // 一打開就停在最近的一場
+  if (now) requestAnimationFrame(() => { track.scrollLeft = now.offsetLeft - (track.clientWidth - now.offsetWidth) / 2; refresh(); });
+  refresh = P.coverflow(track, document.getElementById('dots'));
   document.getElementById('homeEmpty').innerHTML = document.getElementById('track').children.length ? '' : `<div class="glass" style="margin-top:18px;text-align:center;padding:26px 18px"><div class="kick" style="color:var(--m2)">NO DATA // 記憶體空白</div><p style="color:#c7d2e6;line-height:1.7">記錄你的第一場演唱會，<br>或先載入範例資料看看效果。</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="cbtn" data-new>＋ 新增演唱會</button><button class="chipbtn" data-demo style="min-height:44px">載入範例</button></div></div>`;
   renderArchive(); renderStats(); storageInfo();
 }
@@ -1037,7 +1041,7 @@ const tickSale = () => document.querySelectorAll('[data-sale]').forEach((el) => 
 setInterval(tickSale, 1000);
 
 const row = (s) => { const p = P.parts(s.date); return `
-    <button class="row" data-open="${s.id}"><span class="in"><span class="sw"><b class="${ST[s.status]}">${p.d}</b><small>${p.mon} ${p.yy}</small></span><span class="tx"><b>${esc(s.artist)}</b><span>${s.cat !== 'concert' ? CATS[s.cat] + ' · ' : ''}${s.status === 'presale' ? '開賣 ' + saleWhen(s) : esc(s.venue || P.STATUS[s.status])}${s.qty > 1 ? ` · ${s.qty} 張` : ''}</span></span><span class="pr">${s.price ? Math.round(twd(s)).toLocaleString() : '—'}</span></span></button>`; };
+    <button class="row" data-open="${s.id}"><span class="in"><span class="sw"><b class="${ST[s.status]}">${p.d}</b><small>${p.yy}年${p.mon}</small></span><span class="tx"><b>${esc(s.artist)}</b><span>${s.cat !== 'concert' ? CATS[s.cat] + ' · ' : ''}${s.status === 'presale' ? '開賣 ' + saleWhen(s) : esc(s.venue || P.STATUS[s.status])}${s.qty > 1 ? ` · ${s.qty} 張` : ''}</span></span><span class="pr">${s.price ? Math.round(twd(s)).toLocaleString() : '—'}</span></span></button>`; };
 const tile = (s) => { const p = P.parts(s.date); return `
     <button class="tile" data-open="${s.id}"><span class="in"><span class="cv" style="background:${cover(s)}"><b>${p.d}</b></span><span class="tt">${esc(s.artist)}<small>${CATS[s.cat]} · ${P.STATUS[s.status]}</small></span></span></button>`; };
 function renderCal(list) {
