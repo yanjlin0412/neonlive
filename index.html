@@ -243,8 +243,8 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 .f label{display:flex;flex-direction:column;gap:6px;font:11px "JetBrains Mono",monospace;letter-spacing:.14em;color:var(--c)}
 .f input,.f textarea,.f select{min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(var(--panel-rgb),.75);color:#eef1f6;font-family:-apple-system,"PingFang TC",sans-serif;letter-spacing:0;-webkit-appearance:none;appearance:none;width:100%}
 .f input:focus,.f textarea:focus,.f select:focus{outline:0;border-color:var(--c);box-shadow:0 0 16px rgba(var(--c-rgb),.3)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.three{display:grid;grid-template-columns:1.4fr .8fr 1fr;gap:8px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.three{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1fr);gap:8px}
 .calc{border-radius:14px;padding:12px 14px;background:rgba(var(--y-rgb),.07);border:1px solid rgba(var(--y-rgb),.35);font:13px "JetBrains Mono",monospace;color:#c7d2e6}
 .calc b{display:block;font-size:20px;color:var(--y)}
 .rate{display:flex;gap:2px}
@@ -399,9 +399,9 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 .actmenu .danger{color:#ff6b81}
 /* ============ 數位票根選擇器 ============ */
 .f select{display:none}
-.f .pickbtn{position:relative;min-height:48px;padding:12px 34px 12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(var(--panel-rgb),.75);color:#eef1f6;font:15px -apple-system,"PingFang TC",sans-serif;letter-spacing:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f .pickbtn{position:relative;width:100%;min-width:0;min-height:48px;padding:12px 34px 12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(var(--panel-rgb),.75);color:#eef1f6;font:15px -apple-system,"PingFang TC",sans-serif;letter-spacing:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .f .pickbtn::after{content:"";position:absolute;right:14px;top:50%;width:7px;height:7px;margin-top:-6px;border:solid var(--c);border-width:0 2px 2px 0;transform:rotate(45deg);opacity:.85}
-.f .pickbtn.empty{color:#6b7385}
+.f .pickbtn.unset{color:#6b7385}
 .f .pickbtn:focus-visible,.f .pickbtn.on{outline:0;border-color:var(--c);box-shadow:0 0 16px rgba(var(--c-rgb),.3)}
 .picker{position:absolute;inset:0;z-index:70;display:none}
 .picker.on{display:block}
@@ -1574,7 +1574,7 @@ const nowYMD = () => P.today.split('-').map(Number);
 const saleLabel = (v) => { const [d, t] = v.split('T'); const p = P.parts(d); return `${p.y}年${+p.m}月${+p.d}日 ${t.slice(0, 5)}`; };
 const PICKS = {
   date: {
-    show: (v) => { if (!v) return '選擇日期'; const p = P.parts(v); return `${p.y}年${+p.m}月${+p.d}日（${p.wk}）`; },
+    show: (v) => { if (!v) return '選擇日期'; const p = P.parts(v); return `${p.y}/${+p.m}/${+p.d}`; },
     open(v) {
       const [y, m, d] = (v || P.today).split('-').map(Number);
       return { title: '日期', cols: dateCols(y, m, d), fix: fixDays, now: nowYMD,
@@ -1618,7 +1618,7 @@ for (const [name, cfg] of Object.entries(PICKS)) {
     pkOpen({ ...o, done: (vals) => set(o.done(vals)), clear: o.clear && (() => set('')) });
   });
 }
-function syncPicks() { for (const [name, b] of Object.entries(pickBtns)) { const v = F(name).value; b.textContent = PICKS[name].show(v); b.classList.toggle('empty', !v && name !== 'status'); } }
+function syncPicks() { for (const [name, b] of Object.entries(pickBtns)) { const v = F(name).value; b.textContent = PICKS[name].show(v); b.classList.toggle('unset', !v && name !== 'status'); } }
 
 function duplicate(id) {
   const s = P.get(id); openEditor(id);
