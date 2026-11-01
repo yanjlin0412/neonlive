@@ -1,5 +1,5 @@
 // 離線快取：App 外殼採 cache-first，字型採 stale-while-revalidate
-const VERSION = 'neonlive-v8';
+const VERSION = 'neonlive-v9';
 const SHELL = [
   './',
   './index.html',
@@ -41,7 +41,7 @@ self.addEventListener('fetch', (e) => {
     // 頁面導覽：先網路（拿到更新），失敗再用快取
     if (req.mode === 'navigate') {
       e.respondWith(
-        fetch(req)
+        fetch(req, { cache: 'no-store' })   // 繞過 GitHub Pages 的 10 分鐘 HTTP 快取，一打開就是最新版
           .then((res) => { const copy = res.clone(); caches.open(VERSION).then((c) => c.put('./index.html', copy)); return res; })
           .catch(() => caches.match('./index.html'))
       );

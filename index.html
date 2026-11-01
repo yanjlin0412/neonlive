@@ -1826,7 +1826,7 @@ P.everySecond(() => { document.getElementById('clock').textContent = new Date().
   const moved = await migrateV1(); if (moved) await P.load();
   P.init({ render, detail, onGo: (n) => { document.querySelector('nav.pill').style.display = ['detail', 'sys', 'artist'].includes(n) ? 'none' : ''; if (n === 'home' && refresh) requestAnimationFrame(refresh); } });
   if (moved) P.toast(`已從第一版搬移 ${moved} 筆紀錄`);
-  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
+  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((r) => { r.update(); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') r.update(); }); });   // 每次回到 App 都檢查新版
 })();
 </script>
 </body>
