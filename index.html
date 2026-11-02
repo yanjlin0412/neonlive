@@ -412,6 +412,10 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 #tkText:focus{outline:0;border-color:var(--c)}
 .tkguide{margin:0 0 12px;padding:0 0 0 20px;display:grid;gap:8px;font-size:13px;line-height:1.6;color:var(--mut)}
 .tkguide[hidden]{display:none}
+.tkprog{position:relative;height:40px;margin-bottom:10px;border-radius:12px;overflow:hidden;background:rgba(var(--c-rgb),.08);border:1px solid rgba(var(--c-rgb),.35)}
+.tkprog[hidden]{display:none}
+.tkprog i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,rgba(var(--c-rgb),.35),rgba(var(--m-rgb),.35));transition:width .3s}
+.tkprog span{position:relative;display:block;line-height:38px;text-align:center;font:600 13px -apple-system,"PingFang TC",sans-serif;color:#eef1f6}
 .scsteps{margin:0;padding-left:20px;color:#c7d2e6;line-height:1.7;font-size:14px}
 .tkguide b{color:#eef1f6}
 .tkguide em{font-style:normal;color:var(--c)}
@@ -523,7 +527,7 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
       <form class="f" id="addf" novalidate>
         <input type="hidden" name="sid">
         <div class="edhd"><button type="button" data-close style="min-height:44px;color:var(--mut)">取消</button><span class="kick" id="edTitle">NEW.ENTRY</span><button class="cbtn">儲存</button></div>
-        <div class="tkimp"><button type="button" id="tkPaste"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>貼上票券文字</button><button type="button" id="tkScan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/></svg>從照片匯入</button></div>
+        <div class="tkimp"><button type="button" id="tkPaste"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>貼上票券文字</button><button type="button" id="tkScan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/></svg>掃描票券照片</button><input type="file" accept="image/*" id="tkFile" hidden></div>
         <label>藝人 *<input name="artist" placeholder="例：DAY6"></label>
         <label>巡演名稱<input name="tour"></label>
         <label class="coverpick"><span class="pv" id="coverPv" aria-hidden="true">＋</span><span><b style="display:block;color:#eef1f6;font:700 14px -apple-system,'PingFang TC',sans-serif">票面封面照片</b><span style="color:var(--mut);font:12px -apple-system,'PingFang TC',sans-serif;letter-spacing:0">選一張現場照或海報，會顯示在票卡上</span></span><input type="file" name="cover" accept="image/*" hidden id="coverIn"></label>
@@ -576,9 +580,10 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
     <div class="pk">
       <div class="grab"></div>
       <div class="pkhd"><div><small>TICKET.IMPORT</small><b id="tkTitle">從票券帶入</b></div><span><button type="button" class="pkclear" data-tkclose>關閉</button></span></div>
+      <div class="tkprog" id="tkProg" hidden><i id="tkBar"></i><span id="tkMsg"></span></div>
       <ol class="tkguide" id="tkGuide" hidden>
-        <li><b>照片裡的票</b>：在「照片」App 打開票券照片 → 點右下角的<em>文字辨識</em>圖示 → 「全部拷貝」→ 回來按「貼上票券文字」。</li>
-        <li><b>一鍵捷徑</b>：到右上角<em>設定</em>安裝「NEON匯入票券」捷徑，之後在照片按<em>分享</em> → 選這個捷徑，回來按「貼上票券文字」。</li>
+        <li><b>網路訂票的確認信、訂單頁</b>：選取文字 → 拷貝，回來按「貼上票券文字」。</li>
+        <li><b>照片裡的票</b>：建議直接用「掃描票券照片」比較準；也可以在「照片」App 點右下角的<em>文字辨識</em>圖示 →「全部拷貝」。</li>
         <li><b>手上的紙本票</b>：點一下下面的文字框 → 鍵盤上方或選單裡的<em>掃描文字</em> → 對準票券，文字會直接填進來。</li>
       </ol>
       <p class="tkhint" id="tkHint">在「照片」打開票券照片 → 點右下角的文字辨識圖示 → 全部拷貝，再貼到下面。</p>
@@ -1689,7 +1694,7 @@ function applyTicket(o) {
   return keys.length;
 }
 const tkSheet = document.getElementById('tkSheet'), tkText = document.getElementById('tkText');
-const tkOpen = (guide) => { document.getElementById('tkGuide').hidden = !guide; document.getElementById('tkHint').hidden = !!guide; tkSheet.classList.add('on'); };
+const tkOpen = (ocr) => { document.getElementById('tkProg').hidden = !ocr; document.getElementById('tkGuide').hidden = !!ocr; document.getElementById('tkHint').hidden = true; tkSheet.classList.add('on'); };
 const tkClose = () => tkSheet.classList.remove('on');
 function tkRun(text) {
   const n = applyTicket(parseTicket(text));
@@ -1704,8 +1709,43 @@ document.getElementById('tkPaste').addEventListener('click', async () => {
   if (t && t.trim() && tkRun(t)) return;
   tkText.value = t || ''; tkOpen(false);
 });
-// 從照片匯入：文字辨識交給 iOS 內建的原況文字／捷徑（網頁內跑模型在 iPhone 上記憶體不夠），這裡只顯示做法
-document.getElementById('tkScan').addEventListener('click', () => { tkText.value = ''; tkOpen(true); });
+// 掃描照片：ocr.js 用 onnxruntime-web 跑 PaddleOCR 模型（放在 ocr/），比 iOS 內建辨識準。第一次使用才下載約 18 MB，之後由 sw.js 快取在手機上
+const tkFile = document.getElementById('tkFile');
+document.getElementById('tkScan').addEventListener('click', () => tkFile.click());
+let ocrP = null;
+const loadOcr = () => ocrP || (ocrP = import('./ocr.js').then(async (m) => { await m.load(); return m; }).catch((e) => { ocrP = null; throw e; }));
+async function tkPrep(f) {   // 解碼時就縮到寬 1600：4800 萬畫素的照片完整解開要約 190 MB，iPhone 會因此把 App 關掉
+  try { return await createImageBitmap(f, { resizeWidth: 1600, resizeQuality: 'high' }); } catch (e) { /* 不支援縮放解碼就先完整解開再縮 */ }
+  const bm = await createImageBitmap(f), k = Math.min(1, 2000 / Math.max(bm.width, bm.height)), c = document.createElement('canvas');
+  c.width = Math.round(bm.width * k); c.height = Math.round(bm.height * k);
+  c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height); bm.close();
+  return c;
+}
+try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足（v22）。可以先改用「貼上票券文字」`), 1200); } } catch (e) { /* 無痕模式 */ }
+tkFile.addEventListener('change', async () => {
+  const f = tkFile.files[0]; tkFile.value = ''; if (!f) return;
+  const bar = document.getElementById('tkBar'), msg = document.getElementById('tkMsg');
+  const prog = (p, t) => { bar.style.width = Math.round(p * 100) + '%'; msg.textContent = t; };
+  tkText.value = ''; tkOpen(true);
+  const first = !ocrP; let fake = 0;
+  const tick = setInterval(() => { fake = Math.min(.9, fake + (first ? .012 : .05)); bar.style.width = Math.round(fake * 100) + '%'; }, 300);   // 模型下載沒有進度回報，用估計的進度條
+  let stage = '載入程式庫';
+  const mark = (t) => { stage = t; try { localStorage.setItem('neonlive-ocr-stage', t); } catch (e) { /* 無痕模式 */ } };   // App 若被系統關掉，下次開啟可以知道停在哪一步
+  try {
+    mark('載入模型'); prog(0, first ? '載入辨識模型…（第一次約 18 MB，之後不用再下載）' : '辨識中…');
+    const ocr = await loadOcr();
+    mark('讀取照片'); const img = await tkPrep(f);
+    mark('辨識照片'); msg.textContent = '辨識中…';
+    const lines = await ocr.read(img); if (img.close) img.close(); else img.width = 0;   // 用完馬上釋放
+    tkText.value = tkClean(lines.join('\n')).trim();
+    clearInterval(tick); prog(1, '辨識完成'); mark('');
+    if (!tkRun(tkText.value)) { const h = document.getElementById('tkHint'); h.hidden = false; h.textContent = '辨識結果在下面，可以修改後再按「辨識並帶入」。'; }
+  } catch (e) {
+    clearInterval(tick); mark('');
+    prog(0, `辨識失敗（${stage}）：${String(e && (e.message || e)).slice(0, 80)}`);
+    const h = document.getElementById('tkHint'); h.hidden = false; h.textContent = '可以改用「貼上票券文字」。把上面這行錯誤訊息截圖給開發者，方便修正。';
+  }
+});
 // 安裝捷徑：直接開連結 Safari 會把簽署過的捷徑檔當文字顯示成亂碼，所以改用分享表單把檔案交給「捷徑」App
 // 檔案先預載好，點按鈕時才能立刻叫出分享表單（iOS 要求在點擊當下呼叫，等下載完再叫會被擋）
 let scFile = null;
