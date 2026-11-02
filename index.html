@@ -1638,6 +1638,7 @@ function tkPrep(img) {   // 縮到長邊 2000px，手機記憶體比較吃得消
   c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   return c;
 }
+try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足`), 1200); } } catch (e) { /* 無痕模式 */ }
 tkFile.addEventListener('change', async () => {
   const f = tkFile.files[0]; tkFile.value = ''; if (!f) return;
   const bar = document.getElementById('tkBar'), msg = document.getElementById('tkMsg');
@@ -1645,16 +1646,20 @@ tkFile.addEventListener('change', async () => {
   tkText.value = ''; tkOpen(true);
   const first = !ocrP; let fake = 0;
   const tick = setInterval(() => { fake = Math.min(.9, fake + (first ? .012 : .05)); bar.style.width = Math.round(fake * 100) + '%'; }, 300);   // 模型下載沒有進度回報，用估計的進度條
+  let stage = '載入程式庫';
+  const mark = (t) => { stage = t; try { localStorage.setItem('neonlive-ocr-stage', t); } catch (e) { /* 無痕模式 */ } };   // App 若被系統關掉，下次開啟可以知道停在哪一步
   try {
-    prog(0, first ? '載入辨識模型…（第一次約 30 MB，之後不用再下載）' : '辨識中…');
+    mark('載入模型'); prog(0, first ? '載入辨識模型…（第一次約 30 MB，之後不用再下載）' : '辨識中…');
     const ocr = await loadOcr();
-    msg.textContent = '辨識中…';
+    mark('辨識照片'); msg.textContent = '辨識中…';
     const [r] = await ocr.predict(tkPrep(await createImageBitmap(f)));
     tkText.value = tkClean(r.items.map((i) => i.text).join('\n')).trim();
-    clearInterval(tick); prog(1, '辨識完成');
+    clearInterval(tick); prog(1, '辨識完成'); mark('');
     if (!tkRun(tkText.value)) { const h = document.getElementById('tkHint'); h.hidden = false; h.textContent = '辨識結果在下面，可以修改後再按「辨識並帶入」。'; }
   } catch (e) {
-    clearInterval(tick); prog(0, '辨識失敗：請確認網路連線，或改用「貼上票券文字」');
+    clearInterval(tick); mark('');
+    prog(0, `辨識失敗（${stage}）：${String(e && (e.message || e)).slice(0, 80)}`);
+    const h = document.getElementById('tkHint'); h.hidden = false; h.textContent = '可以改用「貼上票券文字」。把上面這行錯誤訊息截圖給開發者，方便修正。';
   }
 });
 
