@@ -1547,7 +1547,7 @@ function tkClean(t) {
 }
 function parseTicket(raw) {
   const text = tkClean(raw), lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean), out = {};
-  const isLabelOnly = (l) => !l.replace(TK_LABEL, '').replace(/[\/／:：\s]/g, '');
+  const isLabelOnly = (l) => !l.replace(TK_LABEL, '').replace(/[\/／:：!！|｜\s]/g, '').replace(/^[lfiI1]$/, '');   // 「Event!」「Placel」這類 OCR 把斜線讀錯的標籤
   const after = (re) => {   // 標籤後面同一行的內容，沒有就拿下一行
     for (let i = 0; i < lines.length; i++) {
       const m = lines[i].match(re); if (!m) continue;
@@ -1625,20 +1625,18 @@ document.getElementById('tkPaste').addEventListener('click', async () => {
   if (t && t.trim() && tkRun(t)) return;
   tkText.value = t || ''; tkOpen(false);
 });
-// 掃描照片：用 PaddleOCR（PP-OCRv5）。第一次使用才下載約 30 MB 的辨識工具與模型，之後由 sw.js 快取在手機上
+// 掃描照片：ocr.js 用 onnxruntime-web 跑 PP-OCRv5 模型（放在 ocr/）。第一次使用才下載約 25 MB，之後由 sw.js 快取在手機上
 const tkFile = document.getElementById('tkFile');
 document.getElementById('tkScan').addEventListener('click', () => tkFile.click());
 let ocrP = null;
-const loadOcr = () => ocrP || (ocrP = import('https://cdn.jsdelivr.net/npm/@paddleocr/paddleocr-js@0.4.2/+esm')
-  .then(({ PaddleOCR }) => PaddleOCR.create({ lang: 'ch', ocrVersion: 'PP-OCRv5', textDetectionBatchSize: 1, textRecognitionBatchSize: 2, ortOptions: { backend: 'wasm', numThreads: 1 } }))
-  .catch((e) => { ocrP = null; throw e; }));
-function tkPrep(img) {   // 縮到長邊 1280px（偵測也用 1280）：iPhone 上 2000px 會在偵測階段吃光記憶體被系統關掉
-  const k = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+const loadOcr = () => ocrP || (ocrP = import('./ocr.js').then(async (m) => { await m.load(); return m; }).catch((e) => { ocrP = null; throw e; }));
+function tkPrep(img) {   // 縮到長邊 2000px；偵測時 ocr.js 會再縮到 960，這張只拿來裁切文字
+  const k = Math.min(1, 2000 / Math.max(img.width, img.height)), c = document.createElement('canvas');
   c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
   c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   return c;
 }
-try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足`), 1200); } } catch (e) { /* 無痕模式 */ }
+try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足（精簡版辨識）`), 1200); } } catch (e) { /* 無痕模式 */ }
 tkFile.addEventListener('change', async () => {
   const f = tkFile.files[0]; tkFile.value = ''; if (!f) return;
   const bar = document.getElementById('tkBar'), msg = document.getElementById('tkMsg');
@@ -1649,11 +1647,11 @@ tkFile.addEventListener('change', async () => {
   let stage = '載入程式庫';
   const mark = (t) => { stage = t; try { localStorage.setItem('neonlive-ocr-stage', t); } catch (e) { /* 無痕模式 */ } };   // App 若被系統關掉，下次開啟可以知道停在哪一步
   try {
-    mark('載入模型'); prog(0, first ? '載入辨識模型…（第一次約 30 MB，之後不用再下載）' : '辨識中…');
+    mark('載入模型'); prog(0, first ? '載入辨識模型…（第一次約 25 MB，之後不用再下載）' : '辨識中…');
     const ocr = await loadOcr();
     mark('辨識照片'); msg.textContent = '辨識中…';
-    const [r] = await ocr.predict(tkPrep(await createImageBitmap(f)), { textDetLimitType: 'max', textDetLimitSideLen: 1280 });
-    tkText.value = tkClean(r.items.map((i) => i.text).join('\n')).trim();
+    const bm = await createImageBitmap(f), lines = await ocr.read(tkPrep(bm)); bm.close();
+    tkText.value = tkClean(lines.join('\n')).trim();
     clearInterval(tick); prog(1, '辨識完成'); mark('');
     if (!tkRun(tkText.value)) { const h = document.getElementById('tkHint'); h.hidden = false; h.textContent = '辨識結果在下面，可以修改後再按「辨識並帶入」。'; }
   } catch (e) {

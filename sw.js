@@ -1,6 +1,6 @@
 // 離線快取：App 外殼採 cache-first，字型採 stale-while-revalidate
-const VERSION = 'neonlive-v15';
-const OCR = 'neonlive-ocr';
+const VERSION = 'neonlive-v16';
+const OCR = 'neonlive-ocr2';   // 換名稱會刪掉舊版 paddleocr-js 的 30 MB 快取
 const SHELL = [
   './',
   './index.html',
@@ -39,7 +39,7 @@ self.addEventListener('fetch', (e) => {
   }
 
   // 掃描票券用的 OCR 程式庫與模型：放在獨立快取，改版也不刪，第二次起不用重新下載
-  if ((url.hostname === 'cdn.jsdelivr.net' && /paddleocr|opencv|onnxruntime|js-yaml|clipper-lib/.test(url.pathname)) || url.hostname.endsWith('bcebos.com')) {
+  if ((url.hostname === 'cdn.jsdelivr.net' && url.pathname.includes('onnxruntime')) || (url.origin === location.origin && url.pathname.includes('/ocr/'))) {
     e.respondWith(caches.open(OCR).then(async (c) => (await c.match(req)) || fetch(req).then((res) => { if (res.ok) c.put(req, res.clone()); return res; })));
     return;
   }
