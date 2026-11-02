@@ -412,6 +412,7 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 #tkText:focus{outline:0;border-color:var(--c)}
 .tkguide{margin:0 0 12px;padding:0 0 0 20px;display:grid;gap:8px;font-size:13px;line-height:1.6;color:var(--mut)}
 .tkguide[hidden]{display:none}
+.scsteps{margin:0;padding-left:20px;color:#c7d2e6;line-height:1.7;font-size:14px}
 .tkguide b{color:#eef1f6}
 .tkguide em{font-style:normal;color:var(--c)}
 .f .filled{border-color:var(--c)!important;box-shadow:0 0 18px rgba(var(--c-rgb),.45)!important;transition:box-shadow .6s,border-color .6s}
@@ -489,6 +490,14 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
   <main class="screen" data-screen="sys">
     <div class="hd"><div><div class="kick">SYSTEM // CONFIG</div><h1 class="ct">SYSTEM</h1></div><button class="knob" data-go="home" aria-label="關閉"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eef1f6" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
     <div class="glass" style="margin-top:16px"><div class="kick" style="margin-bottom:10px">背景 BACKGROUND</div><div class="bgpick" id="bgpick"></div></div>
+    <div class="glass"><div class="kick" style="margin-bottom:8px">票券匯入捷徑 SHORTCUT</div>
+      <p class="lbl" style="margin:0 0 12px;line-height:1.6">用 iPhone 內建的文字辨識讀票券照片，在「照片」按分享就能一鍵拷貝票券文字。辨識在手機上完成，不會上傳。</p>
+      <a class="cbtn" id="scInstall" href="NEON%E5%8C%AF%E5%85%A5%E7%A5%A8%E5%88%B8.shortcut" target="_blank" rel="noopener" style="display:grid;place-items:center;text-decoration:none">一鍵安裝「NEON匯入票券」捷徑</a>
+      <div class="lbl" style="margin:14px 0 6px;color:#eef1f6;font-weight:600">安裝</div>
+      <ol class="scsteps"><li>點上面的按鈕，Safari 問要不要下載時選「下載」</li><li>點網址列左邊的下載圖示（或到「檔案」App 的「下載項目」），點「NEON匯入票券」</li><li>「捷徑」App 會打開，點「加入捷徑」就完成了</li></ol>
+      <div class="lbl" style="margin:14px 0 6px;color:#eef1f6;font-weight:600">使用</div>
+      <ol class="scsteps"><li>在「照片」打開票券照片，點左下角「分享」</li><li>往下滑，點「NEON匯入票券」（第一次會問能不能存取，選「允許」）</li><li>看到「票券文字已拷貝」通知後，打開 NEON//LIVE → 下方「＋」</li><li>點「貼上票券文字」→ iOS 跳出「貼上」時點一下，欄位就會自動帶入</li></ol>
+      <p class="lbl" style="margin:10px 0 0;line-height:1.6">分享選單找不到捷徑：滑到最下面點「編輯動作」，把「NEON匯入票券」加到常用。也可以直接在「捷徑」App 點它，再選一張照片。</p></div>
     <div class="glass"><div class="kick" style="margin-bottom:8px">匯率（約略，換算成台幣）</div><div id="rates" class="mono" style="font-size:13px;color:#c7d2e6;line-height:1.8"></div></div>
     <div class="glass"><div class="kick" style="margin-bottom:8px">資料與備份</div><p class="lbl" style="margin:0 0 12px;line-height:1.6">所有紀錄和照片只存在這支手機上，不會上傳任何伺服器。建議定期匯出備份到「檔案」或 iCloud Drive。</p>
       <div style="display:flex;flex-direction:column;gap:10px"><button class="cbtn" id="btnExport">匯出備份（含照片）</button><label class="chipbtn" style="min-height:44px;display:grid;place-items:center;font-size:14px;cursor:pointer">匯入備份<input type="file" id="importIn" accept="application/json,.json" hidden></label><button class="chipbtn warn" id="btnDemo" style="min-height:44px;font-size:14px">載入範例資料</button></div>
@@ -569,7 +578,7 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
       <div class="pkhd"><div><small>TICKET.IMPORT</small><b id="tkTitle">從票券帶入</b></div><span><button type="button" class="pkclear" data-tkclose>關閉</button></span></div>
       <ol class="tkguide" id="tkGuide" hidden>
         <li><b>照片裡的票</b>：在「照片」App 打開票券照片 → 點右下角的<em>文字辨識</em>圖示 → 「全部拷貝」→ 回來按「貼上票券文字」。</li>
-        <li><b>一鍵捷徑</b>：設定好「NEON 匯入票券」捷徑後，在照片按<em>分享</em> → 選這個捷徑，文字就會自動拷貝，回來按「貼上票券文字」。</li>
+        <li><b>一鍵捷徑</b>：到右上角<em>設定</em>安裝「NEON匯入票券」捷徑，之後在照片按<em>分享</em> → 選這個捷徑，回來按「貼上票券文字」。</li>
         <li><b>手上的紙本票</b>：點一下下面的文字框 → 鍵盤上方或選單裡的<em>掃描文字</em> → 對準票券，文字會直接填進來。</li>
       </ol>
       <p class="tkhint" id="tkHint">在「照片」打開票券照片 → 點右下角的文字辨識圖示 → 全部拷貝，再貼到下面。</p>
