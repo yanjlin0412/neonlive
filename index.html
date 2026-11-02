@@ -1579,10 +1579,10 @@ function parseTicket(raw) {
   if (!ev) ev = lines.find((l) => /TOUR|CONCERT|LIVE|演唱會|巡迴|見面會|FAN ?MEETING/i.test(l)) || '';
   ev = ev.replace(/\s*#\d+.*$/, '').replace(/\s+[A-Z0-9]{10,}.*$/i, '').replace(/^[^A-Za-z0-9\u3400-\u9fff]+/, '').trim();
   if (ev) {
-    out.tour = ev;
+    out.tour = ev.replace(/([A-Za-z])((?:19|20)\d{2})(?!\d)/g, '$1 $2').replace(/((?:19|20)\d{2})([A-Za-z]{3,})/g, '$1 $2');   // 補回 OCR 黏掉的空格
     const known = [...new Set(P.shows.map((s) => s.artist).filter(Boolean))].sort((a, b) => b.length - a.length)
       .find((a) => norm(ev).includes(norm(a)));
-    const cut = ev.search(/\s(?:19|20)\d{2}\b|\s?(?:WORLD |ASIA |ARENA |DOME )?TOUR|巡迴|演唱會|CONCERT|\bLIVE\b|FAN ?MEETING|見面會|[《「<〈【\[]/i);
+    const cut = ev.search(/\s?(?:19|20)\d{2}(?!\d)|\s?(?:WORLD |ASIA |ARENA |DOME )?TOUR|巡迴|演唱會|CONCERT|\bLIVE\b|FAN ?MEETING|見面會|[《「<〈【\[]/i);
     out.artist = known || (cut > 0 ? ev.slice(0, cut) : ev).trim().split(' ').filter((w, i, a) => !(i < a.length - 1 && w.length <= 2)).join(' ');   // 去掉 OCR 在藝人名前多辨識出的短字
     const ai = out.artist ? out.tour.indexOf(out.artist) : -1; if (ai > 0) out.tour = out.tour.slice(ai);
   }
@@ -1630,10 +1630,10 @@ const tkFile = document.getElementById('tkFile');
 document.getElementById('tkScan').addEventListener('click', () => tkFile.click());
 let ocrP = null;
 const loadOcr = () => ocrP || (ocrP = import('https://cdn.jsdelivr.net/npm/@paddleocr/paddleocr-js@0.4.2/+esm')
-  .then(({ PaddleOCR }) => PaddleOCR.create({ lang: 'ch', ocrVersion: 'PP-OCRv5', ortOptions: { backend: 'wasm', numThreads: 1 } }))
+  .then(({ PaddleOCR }) => PaddleOCR.create({ lang: 'ch', ocrVersion: 'PP-OCRv5', textDetectionBatchSize: 1, textRecognitionBatchSize: 2, ortOptions: { backend: 'wasm', numThreads: 1 } }))
   .catch((e) => { ocrP = null; throw e; }));
-function tkPrep(img) {   // 縮到長邊 2000px，手機記憶體比較吃得消
-  const k = Math.min(1, 2000 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+function tkPrep(img) {   // 縮到長邊 1280px（偵測也用 1280）：iPhone 上 2000px 會在偵測階段吃光記憶體被系統關掉
+  const k = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas');
   c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
   c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   return c;
@@ -1652,7 +1652,7 @@ tkFile.addEventListener('change', async () => {
     mark('載入模型'); prog(0, first ? '載入辨識模型…（第一次約 30 MB，之後不用再下載）' : '辨識中…');
     const ocr = await loadOcr();
     mark('辨識照片'); msg.textContent = '辨識中…';
-    const [r] = await ocr.predict(tkPrep(await createImageBitmap(f)));
+    const [r] = await ocr.predict(tkPrep(await createImageBitmap(f)), { textDetLimitType: 'max', textDetLimitSideLen: 1280 });
     tkText.value = tkClean(r.items.map((i) => i.text).join('\n')).trim();
     clearInterval(tick); prog(1, '辨識完成'); mark('');
     if (!tkRun(tkText.value)) { const h = document.getElementById('tkHint'); h.hidden = false; h.textContent = '辨識結果在下面，可以修改後再按「辨識並帶入」。'; }
