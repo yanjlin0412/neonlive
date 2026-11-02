@@ -1636,7 +1636,7 @@ function tkPrep(img) {   // 縮到長邊 2000px；偵測時 ocr.js 會再縮到 
   c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   return c;
 }
-try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足（精簡版辨識）`), 1200); } } catch (e) { /* 無痕模式 */ }
+try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足（v17）。可以先改用「貼上票券文字」`), 1200); } } catch (e) { /* 無痕模式 */ }
 tkFile.addEventListener('change', async () => {
   const f = tkFile.files[0]; tkFile.value = ''; if (!f) return;
   const bar = document.getElementById('tkBar'), msg = document.getElementById('tkMsg');

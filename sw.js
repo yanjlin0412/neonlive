@@ -1,5 +1,5 @@
 // 離線快取：App 外殼採 cache-first，字型採 stale-while-revalidate
-const VERSION = 'neonlive-v16';
+const VERSION = 'neonlive-v17';
 const OCR = 'neonlive-ocr2';   // 換名稱會刪掉舊版 paddleocr-js 的 30 MB 快取
 const SHELL = [
   './',
