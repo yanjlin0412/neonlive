@@ -404,6 +404,17 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 .f .pickbtn::after{content:"";position:absolute;right:14px;top:50%;width:7px;height:7px;margin-top:-6px;border:solid var(--c);border-width:0 2px 2px 0;transform:rotate(45deg);opacity:.85}
 .f .pickbtn.unset{color:#6b7385}
 .f .pickbtn:focus-visible,.f .pickbtn.on{outline:0;border-color:var(--c);box-shadow:0 0 16px rgba(var(--c-rgb),.3)}
+.tkimp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tkimp button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border-radius:14px;border:1px solid rgba(var(--c-rgb),.45);background:rgba(var(--c-rgb),.08);color:var(--c);font:600 14px -apple-system,"PingFang TC",sans-serif}
+.tkimp button:active{background:rgba(var(--c-rgb),.2)}
+.tkhint{margin:0 0 10px;font-size:13px;line-height:1.6;color:var(--mut)}
+#tkText{width:100%;min-height:150px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(var(--panel-rgb),.75);color:#eef1f6;font:14px/1.5 -apple-system,"PingFang TC",sans-serif;resize:vertical}
+#tkText:focus{outline:0;border-color:var(--c)}
+.tkprog{position:relative;height:40px;margin-bottom:10px;border-radius:12px;overflow:hidden;background:rgba(var(--c-rgb),.08);border:1px solid rgba(var(--c-rgb),.35)}
+.tkprog[hidden]{display:none}
+.tkprog i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,rgba(var(--c-rgb),.35),rgba(var(--m-rgb),.35));transition:width .3s}
+.tkprog span{position:relative;display:block;line-height:38px;text-align:center;font:600 13px -apple-system,"PingFang TC",sans-serif;color:#eef1f6}
+.f .filled{border-color:var(--c)!important;box-shadow:0 0 18px rgba(var(--c-rgb),.45)!important;transition:box-shadow .6s,border-color .6s}
 .picker{position:absolute;inset:0;z-index:70;display:none}
 .picker.on{display:block}
 .picker>.scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);animation:fd .2s}
@@ -503,6 +514,7 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
       <form class="f" id="addf" novalidate>
         <input type="hidden" name="sid">
         <div class="edhd"><button type="button" data-close style="min-height:44px;color:var(--mut)">取消</button><span class="kick" id="edTitle">NEW.ENTRY</span><button class="cbtn">儲存</button></div>
+        <div class="tkimp"><button type="button" id="tkPaste"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>貼上票券文字</button><button type="button" id="tkScan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/></svg>掃描票券照片</button><input type="file" accept="image/*" id="tkFile" hidden></div>
         <label>藝人 *<input name="artist" placeholder="例：DAY6"></label>
         <label>巡演名稱<input name="tour"></label>
         <label class="coverpick"><span class="pv" id="coverPv" aria-hidden="true">＋</span><span><b style="display:block;color:#eef1f6;font:700 14px -apple-system,'PingFang TC',sans-serif">票面封面照片</b><span style="color:var(--mut);font:12px -apple-system,'PingFang TC',sans-serif;letter-spacing:0">選一張現場照或海報，會顯示在票卡上</span></span><input type="file" name="cover" accept="image/*" hidden id="coverIn"></label>
@@ -549,6 +561,17 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
     <button role="menuitem" data-act="edit"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg>修改演唱會</button>
     <button role="menuitem" data-act="dup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>複製演唱會</button>
     <button role="menuitem" data-act="del" class="danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>刪除演唱會</button>
+  </div>
+  <div class="picker" id="tkSheet" role="dialog" aria-modal="true" aria-labelledby="tkTitle">
+    <div class="scrim" data-tkclose></div>
+    <div class="pk">
+      <div class="grab"></div>
+      <div class="pkhd"><div><small>TICKET.IMPORT</small><b id="tkTitle">從票券帶入</b></div><span><button type="button" class="pkclear" data-tkclose>關閉</button></span></div>
+      <div class="tkprog" id="tkProg" hidden><i id="tkBar"></i><span id="tkMsg"></span></div>
+      <p class="tkhint" id="tkHint">在「照片」打開票券照片 → 長按票上的字 → 全選 → 拷貝，再貼到下面。</p>
+      <textarea id="tkText" rows="7" placeholder="把票券文字貼在這裡"></textarea>
+      <button type="button" class="cbtn pkok" id="tkApply">辨識並帶入</button>
+    </div>
   </div>
   <div class="picker" id="picker" role="dialog" aria-modal="true" aria-labelledby="pkLabel">
     <div class="scrim" data-pkclose></div>
@@ -1508,6 +1531,141 @@ vSug.addEventListener('click', (e) => {
   const b = e.target.closest('[data-vi]'); if (!b) return;
   const v = vSug._list[b.dataset.vi]; vIn.value = v.n; if (v.c) F('city').value = v.c;
   vSug.hidden = true; F('seat').focus();
+});
+
+// 票券文字解析（原況文字貼上或 OCR 結果都用這支）
+const TK_LABEL = /(節目名稱|活動名稱|演出名稱|場次名稱|節目|Event|演出地點|地點|場地|Place|Venue|日期|Date|時間|Time|座位|Seat|票價|Price|姓名|證號|Name|ID)\s*[\/／:：]?/gi;
+const TK_ANY = /節目名稱|活動名稱|演出名稱|場次名稱|演出地點|地點|場地|Place|Venue|日期|Date|時間|Time|座位|Seat|票價|PRICE|姓名|證號|主辦|指定銀行/i;
+const TK_LEAD = /^(?:(?:Event|Place|Venue|Date|Time|Seat|Price)\s*[\/／:：]?\s*)+/i;
+const TK_STOP = /^(taipei|arena|dome|hall|music|center|centre|stadium|tokyo|seoul|osaka|bangkok|new|live|the|zepp|legacy|kaohsiung|taichung|world|games|national|sports|park|theater|theatre|space|arts|plaza|square|japan|korea|tour|concert)$/i;   // 太常見的英文字不拿來比對場館
+const tkOk = (t) => (t.match(/[A-Za-z0-9㐀-鿿]/g) || []).length / t.replace(/\s/g, '').length > .75 && !/[¢©®£€§¥]/.test(t);   // 雜訊太多的不要
+function tkClean(t) {
+  return String(t || '')
+    .replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)).replace(/　/g, ' ')   // 全形轉半形
+    .replace(/([㐀-鿿])[ \t]+(?=[㐀-鿿])/g, '$1')   // OCR 常把中文字拆開
+    .replace(/[ \t]+/g, ' ');
+}
+function parseTicket(raw) {
+  const text = tkClean(raw), lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean), out = {};
+  const isLabelOnly = (l) => !l.replace(TK_LABEL, '').replace(/[\/／:：\s]/g, '');
+  const after = (re) => {   // 標籤後面同一行的內容，沒有就拿下一行
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(re); if (!m) continue;
+      let rest = lines[i].slice(m.index + m[0].length).replace(/^[\s\/／:：]+/, '').replace(TK_LEAD, '');
+      const nx = rest.search(TK_ANY); if (nx >= 0) rest = rest.slice(0, nx);   // 同一行後面接著別的標籤就截斷
+      rest = rest.trim(); if (rest) return rest;
+      for (let j = i + 1; j < Math.min(lines.length, i + 4); j++) if (!isLabelOnly(lines[j])) return lines[j].replace(TK_LABEL, '').trim();
+    }
+    return '';
+  };
+  // 日期
+  const dm = text.match(/(20\d{2})\s*[\/.\-年]\s*(\d{1,2})\s*[\/.\-月]\s*(\d{1,2})/);
+  if (dm) out.date = `${dm[1]}-${P.pad(+dm[2])}-${P.pad(+dm[3])}`;
+  // 時間：優先取「時間 / Time」後面，否則取日期後第一個 HH:MM
+  const tRe = /(?<!\d)([01]?\d|2[0-3])\s*[:：]\s*([0-5]\d)(?!\d)/;
+  const tm = after(/時間|Time/i).match(tRe) || (dm ? text.slice(dm.index).match(tRe) : null) || text.match(tRe);
+  if (tm) out.time = `${P.pad(+tm[1])}:${tm[2]}`;
+  // 票價
+  const pz = text.match(/(?:票價|PRICE|金額|NT\$|TWD)[^\d]{0,30}?([\d,]{3,7})(?!\d)/i);
+  if (pz) out.price = +pz[1].replace(/,/g, '');
+  // 座位
+  let seat = after(/座位|Seat/i).replace(/^[\/／:：\s]+/, '');
+  if (!seat || !/\d/.test(seat)) { const sm = text.match(/[^\n]{0,14}\d+\s*排\s*[^\n]{0,4}\d+\s*號/); if (sm) seat = sm[0].trim(); }
+  if (seat && !tkOk(seat)) seat = '';
+  if (seat) out.seat = seat.replace(/(號).*$/, '$1').replace(/\s*(全票|優待票|敬老票|身障票).*$/, '').trim();
+  // 節目名稱 → 巡演名稱與藝人
+  let ev = after(/節目名稱|活動名稱|演出名稱|場次名稱|Event/i);
+  if (!ev) ev = lines.find((l) => /TOUR|CONCERT|LIVE|演唱會|巡迴|見面會|FAN ?MEETING/i.test(l)) || '';
+  ev = ev.replace(/\s*#\d+.*$/, '').replace(/\s+[A-Z0-9]{10,}.*$/i, '').replace(/^[^A-Za-z0-9\u3400-\u9fff]+/, '').trim();
+  if (ev) {
+    out.tour = ev;
+    const known = [...new Set(P.shows.map((s) => s.artist).filter(Boolean))].sort((a, b) => b.length - a.length)
+      .find((a) => norm(ev).includes(norm(a)));
+    const cut = ev.search(/\s(?:19|20)\d{2}\b|\s?(?:WORLD |ASIA |ARENA |DOME )?TOUR|巡迴|演唱會|CONCERT|\bLIVE\b|FAN ?MEETING|見面會|[《「<〈【\[]/i);
+    out.artist = known || (cut > 0 ? ev.slice(0, cut) : ev).trim().split(' ').filter((w, i, a) => !(i < a.length - 1 && w.length <= 2)).join(' ');   // 去掉 OCR 在藝人名前多辨識出的短字
+    const ai = out.artist ? out.tour.indexOf(out.artist) : -1; if (ai > 0) out.tour = out.tour.slice(ai);
+  }
+  // 場館：先比對內建清單和去過的場館，找不到再取「地點 / Place」後面
+  const nt = norm(text); let best = null;
+  const cands = [...P.shows.filter((s) => s.venue).map((s) => ({ n: s.venue, c: s.city, k: '' })), ...VENUES];
+  for (const v of cands) for (const [key, w] of [[v.n, 100], ...v.k.split(' ').filter((k) => k.length >= 3 && !TK_STOP.test(k)).map((k) => [k, 0])]) {
+    const nk = norm(key), sc = w + nk.length; if (nk.length >= 3 && nt.includes(nk) && (!best || sc > best.sc)) best = { v, sc };   // 全名比別名優先
+  }
+  if (best) { out.venue = best.v.n; out._vm = 1; if (best.v.c) out.city = best.v.c; }
+  else { const pl = after(/演出地點|地點|場地|Place|Venue/i); if (pl && tkOk(pl)) out.venue = pl.replace(/臺/g, '台'); }
+  // 類型與幣別
+  if (/見面會|FAN ?MEETING|FANMEETING/i.test(text)) out.cat = 'fanmeet'; else if (/音樂祭|FESTIVAL|FEST\b/i.test(text)) out.cat = 'fest';
+  if (/[¥￥]\s?[\d,]{3,}|[\d,]{3,}\s?円|JPY/.test(text)) out.cur = 'JPY'; else if (/₩\s?[\d,]{3,}|[\d,]{3,}\s?원|KRW/.test(text)) out.cur = 'KRW'; else if (/HK\$|HKD/.test(text)) out.cur = 'HKD';
+  return out;
+}
+
+// 把解析結果填進表單，有填到的欄位閃一下
+function applyTicket(o) {
+  delete o._vm;
+  const keys = ['artist', 'tour', 'date', 'time', 'venue', 'city', 'seat', 'price', 'cat', 'cur'].filter((k) => o[k] != null && o[k] !== '');
+  for (const k of keys) F(k).value = o[k];
+  syncPicks(); calc();
+  for (const k of keys) { const el = pickBtns[k] || F(k); el.classList.add('filled'); setTimeout(() => el.classList.remove('filled'), 2200); }
+  return keys.length;
+}
+const tkSheet = document.getElementById('tkSheet'), tkText = document.getElementById('tkText');
+const tkOpen = (ocr) => { document.getElementById('tkProg').hidden = !ocr; document.getElementById('tkHint').hidden = !!ocr; tkSheet.classList.add('on'); };
+const tkClose = () => tkSheet.classList.remove('on');
+function tkRun(text) {
+  const n = applyTicket(parseTicket(text));
+  if (n) { tkClose(); P.toast(`已帶入 ${n} 個欄位，請確認後儲存`); } else P.toast('沒有辨識到票券資料，可以手動修改文字再試');
+  return n;
+}
+document.querySelectorAll('[data-tkclose]').forEach((b) => b.addEventListener('click', tkClose));
+document.getElementById('tkApply').addEventListener('click', () => tkRun(tkText.value));
+document.getElementById('tkPaste').addEventListener('click', async () => {
+  let t = '';
+  try { t = await navigator.clipboard.readText(); } catch (e) { /* 沒有權限就改用手動貼上 */ }
+  if (t && t.trim() && tkRun(t)) return;
+  tkText.value = t || ''; tkOpen(false);
+});
+// 掃描照片：第一次使用時才載入 Tesseract（約 20 MB 辨識模型，之後會快取在手機上）
+const tkFile = document.getElementById('tkFile');
+document.getElementById('tkScan').addEventListener('click', () => tkFile.click());
+let tessP = null;
+const loadTess = () => tessP || (tessP = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload = ok; sc.onerror = () => { tessP = null; no(new Error('load')); }; document.head.append(sc); }));
+function tkPrep(img, filter) {   // 縮圖＋灰階（＋提高對比）
+  const k = Math.min(1, 2200 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  const g = c.getContext('2d'); g.filter = filter; g.drawImage(img, 0, 0, c.width, c.height);
+  return c;
+}
+const tkLines = (t) => tkClean(t).split('\n').filter((l) => { const n = l.replace(/\s/g, ''); return n.length >= 3 && (n.match(/[A-Za-z0-9\u3400-\u9fff]/g) || []).length / n.length > .6; }).join('\n');   // 丟掉背景雜訊行
+function tkMerge(rs) {   // 每個欄位取第一個有結果的；場館優先用比對到清單的
+  const o = {};
+  for (const r of rs) for (const [k, v] of Object.entries(r)) if (o[k] == null) o[k] = v;
+  const vm = rs.find((r) => r._vm); if (vm) { o.venue = vm.venue; o.city = vm.city; }
+  delete o._vm; return o;
+}
+tkFile.addEventListener('change', async () => {
+  const f = tkFile.files[0]; tkFile.value = ''; if (!f) return;
+  const bar = document.getElementById('tkBar'), msg = document.getElementById('tkMsg');
+  const prog = (p, t) => { bar.style.width = Math.round(p * 100) + '%'; msg.textContent = t; };
+  tkText.value = ''; tkOpen(true); prog(0, '載入辨識工具…');
+  let worker, pass = 0;
+  try {
+    await loadTess();
+    worker = await Tesseract.createWorker(['chi_tra', 'eng'], 1, { logger: (m) => {
+      if (/loading|load/.test(m.status) && m.progress) prog(m.progress * .5, `下載辨識模型 ${Math.round(m.progress * 100)}%（只有第一次）`);
+      if (m.status === 'recognizing text') prog(.5 + (pass + m.progress) * .25, `辨識中 ${Math.round((pass + m.progress) * 50)}%`);
+    } });
+    const img = await createImageBitmap(f), texts = [];
+    for (const [i, filt] of ['grayscale(1)', 'grayscale(1) contrast(1.6)'].entries()) {
+      pass = i; texts.push(tkLines((await worker.recognize(tkPrep(img, filt))).data.text));
+    }
+    tkText.value = texts[0].trim();
+    prog(1, '辨識完成');
+    const n = applyTicket(tkMerge(texts.map(parseTicket)));
+    if (n) { tkClose(); P.toast(`已帶入 ${n} 個欄位，請確認後儲存`); }
+    else { document.getElementById('tkHint').hidden = false; document.getElementById('tkHint').textContent = '辨識結果在下面，可以修改後再按「辨識並帶入」。照片字太小或反光時，用「貼上票券文字」會比較準。'; }
+  } catch (e) {
+    prog(0, '辨識失敗：請確認網路連線，或改用「貼上票券文字」');
+  } finally { worker?.terminate(); }
 });
 
 /* ================= 詳情操作選單：數位票根／修改／複製／刪除 ================= */
