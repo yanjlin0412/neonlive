@@ -1551,7 +1551,7 @@ function parseTicket(raw) {
   const after = (re) => {   // 標籤後面同一行的內容，沒有就拿下一行
     for (let i = 0; i < lines.length; i++) {
       const m = lines[i].match(re); if (!m) continue;
-      let rest = lines[i].slice(m.index + m[0].length).replace(/^[\s\/／:：]+/, '').replace(TK_LEAD, '');
+      let rest = lines[i].slice(m.index + m[0].length).replace(/^[\s\/／:：!！|｜]+/, '').replace(TK_LEAD, '').replace(/^[A-Za-z]?[\s\/／:：!！|｜]*$/, '');   // OCR 常把「/」讀成 ! l f
       const nx = rest.search(TK_ANY); if (nx >= 0) rest = rest.slice(0, nx);   // 同一行後面接著別的標籤就截斷
       rest = rest.trim(); if (rest) return rest;
       for (let j = i + 1; j < Math.min(lines.length, i + 4); j++) if (!isLabelOnly(lines[j])) return lines[j].replace(TK_LABEL, '').trim();
@@ -1568,6 +1568,7 @@ function parseTicket(raw) {
   // 票價
   const pz = text.match(/(?:票價|PRICE|金額|NT\$|TWD)[^\d]{0,30}?([\d,]{3,7})(?!\d)/i);
   if (pz) out.price = +pz[1].replace(/,/g, '');
+  else { const pi = lines.findIndex((l) => /票價|PRICE|金額/i.test(l)); const pl = pi < 0 ? null : lines.slice(pi + 1, pi + 5).find((l) => /^\D{0,6}[\d,]{3,7}\D{0,6}$/.test(l)); if (pl) out.price = +pl.match(/[\d,]{3,7}/)[0].replace(/,/g, ''); }   // 票價和數字中間隔了幾行
   // 座位
   let seat = after(/座位|Seat/i).replace(/^[\/／:：\s]+/, '');
   if (!seat || !/\d/.test(seat)) { const sm = text.match(/[^\n]{0,14}\d+\s*排\s*[^\n]{0,4}\d+\s*號/); if (sm) seat = sm[0].trim(); }
@@ -1624,48 +1625,37 @@ document.getElementById('tkPaste').addEventListener('click', async () => {
   if (t && t.trim() && tkRun(t)) return;
   tkText.value = t || ''; tkOpen(false);
 });
-// 掃描照片：第一次使用時才載入 Tesseract（約 20 MB 辨識模型，之後會快取在手機上）
+// 掃描照片：用 PaddleOCR（PP-OCRv5）。第一次使用才下載約 30 MB 的辨識工具與模型，之後由 sw.js 快取在手機上
 const tkFile = document.getElementById('tkFile');
 document.getElementById('tkScan').addEventListener('click', () => tkFile.click());
-let tessP = null;
-const loadTess = () => tessP || (tessP = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload = ok; sc.onerror = () => { tessP = null; no(new Error('load')); }; document.head.append(sc); }));
-function tkPrep(img, filter) {   // 縮圖＋灰階（＋提高對比）
-  const k = Math.min(1, 2200 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+let ocrP = null;
+const loadOcr = () => ocrP || (ocrP = import('https://cdn.jsdelivr.net/npm/@paddleocr/paddleocr-js@0.4.2/+esm')
+  .then(({ PaddleOCR }) => PaddleOCR.create({ lang: 'ch', ocrVersion: 'PP-OCRv5', ortOptions: { backend: 'wasm', numThreads: 1 } }))
+  .catch((e) => { ocrP = null; throw e; }));
+function tkPrep(img) {   // 縮到長邊 2000px，手機記憶體比較吃得消
+  const k = Math.min(1, 2000 / Math.max(img.width, img.height)), c = document.createElement('canvas');
   c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-  const g = c.getContext('2d'); g.filter = filter; g.drawImage(img, 0, 0, c.width, c.height);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   return c;
-}
-const tkLines = (t) => tkClean(t).split('\n').filter((l) => { const n = l.replace(/\s/g, ''); return n.length >= 3 && (n.match(/[A-Za-z0-9\u3400-\u9fff]/g) || []).length / n.length > .6; }).join('\n');   // 丟掉背景雜訊行
-function tkMerge(rs) {   // 每個欄位取第一個有結果的；場館優先用比對到清單的
-  const o = {};
-  for (const r of rs) for (const [k, v] of Object.entries(r)) if (o[k] == null) o[k] = v;
-  const vm = rs.find((r) => r._vm); if (vm) { o.venue = vm.venue; o.city = vm.city; }
-  delete o._vm; return o;
 }
 tkFile.addEventListener('change', async () => {
   const f = tkFile.files[0]; tkFile.value = ''; if (!f) return;
   const bar = document.getElementById('tkBar'), msg = document.getElementById('tkMsg');
   const prog = (p, t) => { bar.style.width = Math.round(p * 100) + '%'; msg.textContent = t; };
-  tkText.value = ''; tkOpen(true); prog(0, '載入辨識工具…');
-  let worker, pass = 0;
+  tkText.value = ''; tkOpen(true);
+  const first = !ocrP; let fake = 0;
+  const tick = setInterval(() => { fake = Math.min(.9, fake + (first ? .012 : .05)); bar.style.width = Math.round(fake * 100) + '%'; }, 300);   // 模型下載沒有進度回報，用估計的進度條
   try {
-    await loadTess();
-    worker = await Tesseract.createWorker(['chi_tra', 'eng'], 1, { logger: (m) => {
-      if (/loading|load/.test(m.status) && m.progress) prog(m.progress * .5, `下載辨識模型 ${Math.round(m.progress * 100)}%（只有第一次）`);
-      if (m.status === 'recognizing text') prog(.5 + (pass + m.progress) * .25, `辨識中 ${Math.round((pass + m.progress) * 50)}%`);
-    } });
-    const img = await createImageBitmap(f), texts = [];
-    for (const [i, filt] of ['grayscale(1)', 'grayscale(1) contrast(1.6)'].entries()) {
-      pass = i; texts.push(tkLines((await worker.recognize(tkPrep(img, filt))).data.text));
-    }
-    tkText.value = texts[0].trim();
-    prog(1, '辨識完成');
-    const n = applyTicket(tkMerge(texts.map(parseTicket)));
-    if (n) { tkClose(); P.toast(`已帶入 ${n} 個欄位，請確認後儲存`); }
-    else { document.getElementById('tkHint').hidden = false; document.getElementById('tkHint').textContent = '辨識結果在下面，可以修改後再按「辨識並帶入」。照片字太小或反光時，用「貼上票券文字」會比較準。'; }
+    prog(0, first ? '載入辨識模型…（第一次約 30 MB，之後不用再下載）' : '辨識中…');
+    const ocr = await loadOcr();
+    msg.textContent = '辨識中…';
+    const [r] = await ocr.predict(tkPrep(await createImageBitmap(f)));
+    tkText.value = tkClean(r.items.map((i) => i.text).join('\n')).trim();
+    clearInterval(tick); prog(1, '辨識完成');
+    if (!tkRun(tkText.value)) { const h = document.getElementById('tkHint'); h.hidden = false; h.textContent = '辨識結果在下面，可以修改後再按「辨識並帶入」。'; }
   } catch (e) {
-    prog(0, '辨識失敗：請確認網路連線，或改用「貼上票券文字」');
-  } finally { worker?.terminate(); }
+    clearInterval(tick); prog(0, '辨識失敗：請確認網路連線，或改用「貼上票券文字」');
+  }
 });
 
 /* ================= 詳情操作選單：數位票根／修改／複製／刪除 ================= */
