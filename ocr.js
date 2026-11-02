@@ -1,9 +1,10 @@
-// 精簡版 PaddleOCR：只用 onnxruntime-web 跑偵測（PP-OCRv6 tiny）＋辨識（PP-OCRv5 mobile）模型，不載 OpenCV。
+// 精簡版 PaddleOCR：只用 onnxruntime-web 跑偵測＋辨識（PP-OCRv5 mobile）模型，不載 OpenCV。
 // 原本的 @paddleocr/paddleocr-js 在 iPhone 上峰值超過 1 GB，會被系統直接關掉。
 // 固定 1.20.1：1.21 起在 iOS 26 Safari 會觸發 WebKit 編譯大型 wasm 函式時記憶體暴增，App 被系統關掉（onnxruntime 議題 26827、WebKit bug 304810）
 const ORT = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
 const M = new URL('./ocr/', import.meta.url).href;
-const DET_SIDE = 960, DET_TH = 0.2, BOX_TH = 0.4, UNCLIP = 1.6, REC_H = 48, REC_MIN = 0.5;
+const DET_SIDE = 1280, DET_TH = 0.3,   // 960 或 v6 tiny 偵測模型會把行距窄的票上下兩行黏在一起
+      BOX_TH = 0.4, UNCLIP = 1.6, REC_H = 48, REC_MIN = 0.5;
 let ort, det, rec, dict;
 
 export async function load() {

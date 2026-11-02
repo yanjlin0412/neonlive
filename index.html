@@ -1347,6 +1347,7 @@ const parseSetlist = (text) => {
 };
 const FIELDS = ['artist', 'tour', 'cat', 'status', 'sale', 'date', 'time', 'venue', 'city', 'seat', 'price', 'qty', 'cur', 'fee', 'with', 'notes'];
 function openEditor(id) {
+  tkPrev = [];
   const s = id ? P.get(id) : null;
   ed.reset(); copyFrom = null; document.getElementById('venueSug').hidden = true;
   F('sid').value = s ? s.id : '';
@@ -1555,7 +1556,7 @@ vSug.addEventListener('click', (e) => {
 // 依欄位標籤判讀再逐欄驗證，涵蓋台灣超商紙本票（ibon／FamiPort：拓元、ibon 售票、KKTIX、年代、寬宏、OPENTIX）、
 // 各平台電子票與確認信，以及常見的英日韓文票面（Ticketmaster、Interpark、Melon、YES24、ぴあ、e+）
 const TK_F = {
-  event: '節目名稱|活動名稱|演出名稱|場次名稱|節目|公演名称?|イベント名|공연명|\\bEvent(?: Name)?\\b|\\bPerformance\\b|\\bShow Name\\b',
+  event: '節目名稱|活動名稱|演出名稱|場次名稱|節[目具貝自]|公演名称?|イベント名|공연명|\\bEvent(?: Name)?\\b|\\bPerformance\\b|\\bShow Name\\b',
   venue: '演出地點|演出場地|活動地點|活動場地|地點|場地|場館|會場|会場|장소|공연장|\\bVenue\\b|\\bPlace\\b|\\bLocation\\b',
   date: '演出日期|活動日期|演出時間|活動時間|場次時間|場次|日期|日時|公演日|開催日|관람일시|관람일|일시|\\bDate(?: ?& ?Time)?\\b',
   time: '開演時間|開演|時間|\\bShow ?Time\\b|\\bStart(?: Time)?\\b|\\bTime\\b',
@@ -1587,15 +1588,16 @@ function tkDate(s) {   // 回傳 [YYYY-MM-DD, 位置]；支援西元、民國、
   if (m) [y, mo, d] = [+m[1], +m[2], +m[3]];
   else if ((m = s.match(/(?<![\d\/])(1[0-4]\d)\s*[\/.年]\s*(\d{1,2})\s*[\/.月]\s*(\d{1,2})(?![\d\/])/))) [y, mo, d] = [+m[1] + 1911, +m[2], +m[3]];   // 民國年
   else if ((m = s.match(/(?:(\d{1,2})(?:st|nd|rd|th)?\s+)?\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(?:(\d{1,2})(?:st|nd|rd|th)?,?\s+)?(20\d{2})/i)) && (m[1] || m[3])) [y, mo, d] = [+m[4], TK_MON[m[2].toLowerCase()], +(m[3] || m[1])];
+  else if ((m = s.match(/(20\d{2})\s*[\/.\-]\s*([01]\d)[71\/|]?([0-3]\d)(?!\d)/)) || (m = s.match(/(?<!\d)(20\d{2})([01]\d)([0-3]\d)(?!\d)/))) [y, mo, d] = [+m[1], +m[2], +m[3]];   // OCR 把「/」讀成 7 或漏掉：2026/07713、20260713
   else return null;
   return mo >= 1 && mo <= 12 && d >= 1 && d <= 31 ? [`${y}-${P.pad(mo)}-${P.pad(d)}`, m.index] : null;
 }
 function tkTime(s) {   // 回傳 HH:MM；支援 19:30、7:30 PM、下午7:30、19時30分、오후 7시
-  const m = s.match(/(上午|下午|晚上|午前|午後|오전|오후|AM|PM)?\s*(?<![\d:])([01]?\d|2[0-3])\s*(?:[:：]\s*([0-5]\d)|時\s*([0-5]\d)?分?|시\s*(?:([0-5]\d)\s*분)?)(?![\d:])\s*(AM|PM|a\.m\.|p\.m\.)?/i);
+  const m = s.match(/(上午|下午|晚上|午前|午後|오전|오후|AM|PM)?[ \t]*(?<!\d)(?<!\d:)([01]?\d|2[0-3])[ \t]*(?:[:：][ \t]*([0-5]\d?)|時[ \t]*([0-5]\d)?分?|시[ \t]*(?:([0-5]\d)[ \t]*분)?)(?![\d:])[ \t]*(AM|PM|a\.m\.|p\.m\.)?/i);   // 不跨行；「18:0」是 OCR 漏掉一個 0
   if (!m || (m[3] == null && !/時|시/.test(m[0]))) return null;
   let h = +m[2]; const ap = (m[1] || m[6] || '').toLowerCase().replace(/\./g, '');
   if (/下午|晚上|午後|오후|pm/.test(ap) && h < 12) h += 12; else if (/上午|午前|오전|am/.test(ap) && h === 12) h = 0;
-  return `${P.pad(h)}:${m[3] || m[4] || m[5] || '00'}`;
+  return `${P.pad(h)}:${(m[3] || m[4] || m[5] || '00').padEnd(2, '0')}`;
 }
 function parseTicket(raw) {
   const text = tkClean(raw), lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean), out = {};
@@ -1638,7 +1640,7 @@ function parseTicket(raw) {
   const price = num(pv) || (cm ? num(cm[1] || cm[2]) : 0);
   if (price) out.price = price;
   // 座位：先比對「X 區 Y 排 Z 號」這類完整寫法，再看座位標籤，最後組合分開的區／排／號
-  const sp = text.match(/[^\n]{0,16}?(?:[A-Z0-9\-]{1,6}|\d{1,3})\s*[-–]?\s*排\s*[-–]?\s*\d{1,3}\s*號/i) ||
+  const sp = text.match(/[^\n]{0,16}?(?:[A-Z0-9\-]{1,6}|\d{1,3})\s*[-–]?\s*排\s*[-–]?\s*[Oo]?\d{1,3}\s*號/i) ||
     text.match(/[^\n]{0,14}?\d{1,3}\s*열\s*\d{1,3}\s*번/) || text.match(/[^\n]{0,14}?\d{1,3}\s*列\s*\d{1,3}\s*番/) ||
     text.match(/(?:Sec(?:tion)?\.?|Block|Zone|Area|Floor)\s*[:#]?\s*[\w\-]+[\s,|\/]*Row\s*[:#]?\s*[\w\-]+[\s,|\/]*Seat(?:\s*No\.?)?\s*[:#]?\s*[\w\-]+/i);
   const seatOk = (v) => v.length <= 40 && notDT(v) && tkOk(v) && (/\d/.test(v) ? !/^\D{0,4}[\d,]{3,}\D{0,3}$/.test(v) || /排|號|區|Row|Seat/i.test(v) : /自由|站|搖滾|身障|STANDING|GA\b|General|Floor|立見|스탠딩/i.test(v));
@@ -1651,10 +1653,25 @@ function parseTicket(raw) {
     const z = at(/^(?:區域|區|樓層|看台|Section|Sec\.?|Block|Zone|Area|구역)\s*[\/／:：]?\s*(.{1,12})$/i), r = at(/^(?:排|Row|열|列)\s*[\/／:：]?\s*([\w\-]{1,4})$/i), n = at(/^(?:號|座號|Seat(?:\s*No\.?)?|번|番)\s*[\/／:：]?\s*([\w\-]{1,4})$/i);
     if (r && n) seat = /[A-Za-z]/.test(r + n) && !/[㐀-鿿]/.test(z) ? `${z ? `Section ${z} ` : ''}Row ${r} Seat ${n}` : `${z ? `${z}${/區|樓|台$/.test(z) ? '' : '區'} ` : ''}${r}排${n}號`;
   }
+  seat = seat.replace(/排\s*[Oo](?=\d)/, '排').replace(/^[\s:：\/／!！|｜]+/, '');
+  if (seat && !/區|樓|看台|Section|구역|ブロック|塁|通路/i.test(seat)) {   // 區域在另一行（「區域：綠518區 2880」）
+    const zm = text.match(/(?:區域|Section|Zone|Block)[\s\/／:：]*([^\n]{1,14}?(?:區|樓|看台|[A-Z]\d*))(?=\s*\d{3,}|\s|$)/i);
+    if (zm) seat = `${zm[1]} ${seat}`;
+  }
   if (seat && seatOk(seat)) out.seat = seat.replace(/(號|번|番)[^\n]*$/, '$1').replace(/\s*(全票|優待票|敬老票|身障票|學生票|愛心票).*$/, '').replace(/\s+/g, ' ').trim();
   // 節目名稱 → 巡演名稱與藝人
   const evOk = (v) => v.length >= 2 && notDT(v) && tkOk(v) && !isVenue(v) && !/^[\d\s,.$#\-]+$/.test(v) && !new RegExp(TK_F.skip, 'i').test(v);
   let ev = after('event', evOk, 4);
+  if (ev) {   // 英文節目名稱被切成好幾行（「NMIXX」「1ST」「WORLD」…），一路接到下一個標籤或雜訊為止
+    const at = lines.findIndex((l) => cut(strip(l)) === ev || l.endsWith(ev));
+    for (let j = at + 1; at >= 0 && j < Math.min(lines.length, at + 14) && ev.length < 90; j++) {
+      const l = lines[j];
+      if (!strip(l) && TK_HEAD.test(l)) continue;   // 只有標籤（EVENT）就跳過
+      if (!/^[A-Z0-9 :：<>〈〉《》「」\[\]\-–&'.!?,~]+$/.test(l) || /^\d{4,}|^#/.test(l)) break;
+      ev += ' ' + l;
+    }
+    ev = ev.replace(/^[:：\s]+/, '').replace(/\s*([:：])\s*/g, ': ').replace(/\s+/g, ' ').replace(/[:：]\s*$/, '');
+  }
   if (!ev) ev = lines.find((l) => /TOUR|CONCERT|\bLIVE\b|SHOWCASE|FAN ?(?:MEETING|CON)|演唱會|巡迴|見面會|音樂會|專場|公演|コンサート|ライブ|콘서트|팬미팅/i.test(l) && evOk(l)) || '';
   ev = ev.replace(/\s*#\d+.*$/, '').replace(/\s+[A-Z0-9]{10,}.*$/i, '').replace(/^[^A-Za-z0-9㐀-鿿가-힯ぁ-ヿ]+/, '').trim();
   if (ev) {
@@ -1676,7 +1693,16 @@ function parseTicket(raw) {
     const nk = norm(key), sc = w + nk.length; if (nk.length >= 3 && nt.includes(nk) && (!best || sc > best.sc)) best = { v, sc };   // 全名比別名優先
   }
   if (best) { out.venue = best.v.n; out._vm = 1; if (best.v.c) out.city = best.v.c; }
-  else { const pl = after('venue', (v) => v.length >= 2 && notDT(v) && tkOk(v) && !/^[\d\s,.\-]+$/.test(v)); if (pl) out.venue = pl.replace(/臺/g, '台'); }
+  else {
+    const pl = after('venue', (v) => v.length >= 2 && notDT(v) && tkOk(v) && !/^[\d\s,.\-]+$/.test(v)), np = norm(pl);
+    let fz = null;
+    for (const v of cands) for (const key of [v.n, ...v.k.split(' ')]) {   // 字數相近、同位置有一半以上的字相同
+      const nk = norm(key); if (nk.length < 3 || Math.abs(nk.length - np.length) > 1 || !/[㐀-鿿]/.test(nk)) continue;
+      let same = 0; for (let i = 0; i < Math.min(nk.length, np.length); i++) if (nk[i] === np[i]) same++;
+      if (same >= 2 && same / nk.length >= .5 && (!fz || same > fz.same)) fz = { v, same };
+    }
+    if (fz) { out.venue = fz.v.n; if (fz.v.c) out.city = fz.v.c; } else if (pl) out.venue = pl.replace(/臺/g, '台');
+  }
   // 類型與幣別
   if (/見面會|FAN ?(?:MEETING|CON)|팬미팅|ファンミ/i.test(text)) out.cat = 'fanmeet'; else if (/音樂祭|FESTIVAL|FEST\b|フェス|페스티벌/i.test(text)) out.cat = 'fest';
   if (/[¥￥]\s?[\d,]{3,}|[\d,]{3,}\s?円|JPY/.test(text)) out.cur = 'JPY'; else if (/₩\s?[\d,]{3,}|[\d,]{3,}\s?원|KRW/.test(text)) out.cur = 'KRW';
@@ -1685,10 +1711,13 @@ function parseTicket(raw) {
 }
 
 // 把解析結果填進表單，有填到的欄位閃一下
+let tkPrev = [];   // 上一次匯入填過的欄位：這次沒辨識到就清掉，避免殘留上一張票的資料
 function applyTicket(o) {
   delete o._vm;
   const keys = ['artist', 'tour', 'date', 'time', 'venue', 'city', 'seat', 'price', 'cat', 'cur'].filter((k) => o[k] != null && o[k] !== '');
+  for (const k of tkPrev) if (!keys.includes(k) && !['cat', 'cur'].includes(k)) F(k).value = '';
   for (const k of keys) F(k).value = o[k];
+  tkPrev = keys;
   syncPicks(); calc();
   for (const k of keys) { const el = pickBtns[k] || F(k); el.classList.add('filled'); setTimeout(() => el.classList.remove('filled'), 2200); }
   return keys.length;
@@ -1721,7 +1750,7 @@ async function tkPrep(f) {   // 解碼時就縮到寬 1600：4800 萬畫素的�
   c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height); bm.close();
   return c;
 }
-try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足（v22）。可以先改用「貼上票券文字」`), 1200); } } catch (e) { /* 無痕模式 */ }
+try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足（v23）。可以先改用「貼上票券文字」`), 1200); } } catch (e) { /* 無痕模式 */ }
 tkFile.addEventListener('change', async () => {
   const f = tkFile.files[0]; tkFile.value = ''; if (!f) return;
   const bar = document.getElementById('tkBar'), msg = document.getElementById('tkMsg');
@@ -1732,7 +1761,7 @@ tkFile.addEventListener('change', async () => {
   let stage = '載入程式庫';
   const mark = (t) => { stage = t; try { localStorage.setItem('neonlive-ocr-stage', t); } catch (e) { /* 無痕模式 */ } };   // App 若被系統關掉，下次開啟可以知道停在哪一步
   try {
-    mark('載入模型'); prog(0, first ? '載入辨識模型…（第一次約 18 MB，之後不用再下載）' : '辨識中…');
+    mark('載入模型'); prog(0, first ? '載入辨識模型…（第一次約 21 MB，之後不用再下載）' : '辨識中…');
     const ocr = await loadOcr();
     mark('讀取照片'); const img = await tkPrep(f);
     mark('辨識照片'); msg.textContent = '辨識中…';

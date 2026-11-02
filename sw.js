@@ -1,6 +1,6 @@
 // 離線快取：App 外殼採 cache-first，字型採 stale-while-revalidate
-const VERSION = 'neonlive-v22';
-const OCR = 'neonlive-ocr3';   // 掃描用的推論引擎與模型，改版也不刪
+const VERSION = 'neonlive-v23';
+const OCR = 'neonlive-ocr4';   // 掃描用的推論引擎與模型，改版也不刪
 const SHELL = [
   './',
   './index.html',
