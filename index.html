@@ -419,6 +419,30 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 .scsteps{margin:0;padding-left:20px;color:#c7d2e6;line-height:1.7;font-size:14px}
 .tkguide b{color:#eef1f6}
 .tkguide em{font-style:normal;color:var(--c)}
+.cam{position:absolute;inset:0;z-index:90;display:none;flex-direction:column;background:#000;padding-top:env(safe-area-inset-top)}
+.cam.on{display:flex}
+.camstage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none}
+.camstage video,.camstage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.cam[data-mode=live] canvas,.cam:not([data-mode=live]) video{display:none}
+.camframe{position:absolute;border:2px solid var(--c);border-radius:10px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55),0 0 18px rgba(var(--c-rgb),.5)}
+.camframe i{position:absolute;width:44px;height:44px;display:none}
+.camframe i::before{content:"";position:absolute;width:18px;height:18px;border:4px solid #fff}
+.camframe [data-h=nw]{left:-22px;top:-22px}.camframe [data-h=nw]::before{left:18px;top:18px;border-width:4px 0 0 4px}
+.camframe [data-h=ne]{right:-22px;top:-22px}.camframe [data-h=ne]::before{right:18px;top:18px;border-width:4px 4px 0 0}
+.camframe [data-h=sw]{left:-22px;bottom:-22px}.camframe [data-h=sw]::before{left:18px;bottom:18px;border-width:0 0 4px 4px}
+.camframe [data-h=se]{right:-22px;bottom:-22px}.camframe [data-h=se]::before{right:18px;bottom:18px;border-width:0 4px 4px 0}
+.cam[data-mode=adjust] .camframe i{display:block}
+.cam[data-mode=busy] .camframe{display:none}
+.camtip{margin:0;padding:12px 20px 4px;min-height:44px;text-align:center;font:14px/1.5 -apple-system,"PingFang TC",sans-serif;color:#eef1f6}
+.cambar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:8px 20px max(env(safe-area-inset-bottom),16px)}
+.cambar button{min-height:44px;font:600 15px -apple-system,"PingFang TC",sans-serif;color:#eef1f6}
+.cam[data-mode=live] .adj,.cam:not([data-mode=live]) .live{display:none}
+.cam[data-mode=busy] .cambar button:not(#camCancel){visibility:hidden}
+#camCancel{justify-self:start}#camAlbum,#camRetry{justify-self:end}
+#camShoot{width:72px;height:72px;border-radius:50%;border:4px solid #fff;background:var(--c);box-shadow:inset 0 0 0 4px #000,0 0 22px rgba(var(--c-rgb),.6)}
+#camShoot:active{transform:scale(.94)}
+#camGo{grid-column:2;grid-row:1;min-width:150px;margin:0;color:#0a0a0a}
+#camRetry{grid-column:3;grid-row:1}
 .f .filled{border-color:var(--c)!important;box-shadow:0 0 18px rgba(var(--c-rgb),.45)!important;transition:box-shadow .6s,border-color .6s}
 .picker{position:absolute;inset:0;z-index:70;display:none}
 .picker.on{display:block}
@@ -589,6 +613,21 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
       <p class="tkhint" id="tkHint">在「照片」打開票券照片 → 點右下角的文字辨識圖示 → 全部拷貝，再貼到下面。</p>
       <textarea id="tkText" rows="7" placeholder="把票券文字貼在這裡"></textarea>
       <button type="button" class="cbtn pkok" id="tkApply">辨識並帶入</button>
+    </div>
+  </div>
+  <div class="cam" id="cam" role="dialog" aria-modal="true" aria-label="掃描票券" data-mode="live">
+    <div class="camstage" id="camStage">
+      <video id="camVid" playsinline muted autoplay></video>
+      <canvas id="camShot"></canvas>
+      <div class="camframe" id="camFrame"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>
+    </div>
+    <p class="camtip" id="camTip"></p>
+    <div class="cambar">
+      <button type="button" id="camCancel">取消</button>
+      <button type="button" class="live" id="camShoot" aria-label="拍照"></button>
+      <button type="button" class="live" id="camAlbum">相簿</button>
+      <button type="button" class="adj cbtn" id="camGo">開始辨識</button>
+      <button type="button" class="adj" id="camRetry">重來</button>
     </div>
   </div>
   <div class="picker" id="picker" role="dialog" aria-modal="true" aria-labelledby="pkLabel">
@@ -1588,7 +1627,7 @@ function tkDate(s) {   // 回傳 [YYYY-MM-DD, 位置]；支援西元、民國、
   if (m) [y, mo, d] = [+m[1], +m[2], +m[3]];
   else if ((m = s.match(/(?<![\d\/])(1[0-4]\d)\s*[\/.年]\s*(\d{1,2})\s*[\/.月]\s*(\d{1,2})(?![\d\/])/))) [y, mo, d] = [+m[1] + 1911, +m[2], +m[3]];   // 民國年
   else if ((m = s.match(/(?:(\d{1,2})(?:st|nd|rd|th)?\s+)?\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(?:(\d{1,2})(?:st|nd|rd|th)?,?\s+)?(20\d{2})/i)) && (m[1] || m[3])) [y, mo, d] = [+m[4], TK_MON[m[2].toLowerCase()], +(m[3] || m[1])];
-  else if ((m = s.match(/(20\d{2})\s*[\/.\-]\s*([01]\d)[71\/|]?([0-3]\d)(?!\d)/)) || (m = s.match(/(?<!\d)(20\d{2})([01]\d)([0-3]\d)(?!\d)/))) [y, mo, d] = [+m[1], +m[2], +m[3]];   // OCR 把「/」讀成 7 或漏掉：2026/07713、20260713
+  else if ((m = s.match(/(20\d{2})\s*[\/.\-]\s*([01]\d)[71\/|]?([0-3]\d)(?!\d{2})/)) || (m = s.match(/(?<!\d)(20\d{2})([01]\d)([0-3]\d)(?!\d)/))) [y, mo, d] = [+m[1], +m[2], +m[3]];   // OCR 把「/」讀成 7 或漏掉：2026/07713、20260713
   else return null;
   return mo >= 1 && mo <= 12 && d >= 1 && d <= 31 ? [`${y}-${P.pad(mo)}-${P.pad(d)}`, m.index] : null;
 }
@@ -1738,34 +1777,117 @@ document.getElementById('tkPaste').addEventListener('click', async () => {
   if (t && t.trim() && tkRun(t)) return;
   tkText.value = t || ''; tkOpen(false);
 });
-// 掃描照片：ocr.js 用 onnxruntime-web 跑 PaddleOCR 模型（放在 ocr/），比 iOS 內建辨識準。第一次使用才下載約 18 MB，之後由 sw.js 快取在手機上
+// 掃描照片：ocr.js 用 onnxruntime-web 跑 PaddleOCR 模型（放在 ocr/），比 iOS 內建辨識準。第一次使用才下載約 21 MB，之後由 sw.js 快取在手機上
+// 流程像掃證件：相機畫面上有對準框，或從相簿選照片後自動框出票的範圍；只把框內的部分送去辨識，背景雜訊少、字也比較大
 const tkFile = document.getElementById('tkFile');
-document.getElementById('tkScan').addEventListener('click', () => tkFile.click());
 let ocrP = null;
 const loadOcr = () => ocrP || (ocrP = import('./ocr.js').then(async (m) => { await m.load(); return m; }).catch((e) => { ocrP = null; throw e; }));
-async function tkPrep(f) {   // 解碼時就縮到寬 1600：4800 萬畫素的照片完整解開要約 190 MB，iPhone 會因此把 App 關掉
-  try { return await createImageBitmap(f, { resizeWidth: 1600, resizeQuality: 'high' }); } catch (e) { /* 不支援縮放解碼就先完整解開再縮 */ }
-  const bm = await createImageBitmap(f), k = Math.min(1, 2000 / Math.max(bm.width, bm.height)), c = document.createElement('canvas');
-  c.width = Math.round(bm.width * k); c.height = Math.round(bm.height * k);
-  c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height); bm.close();
-  return c;
+try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足（v24）。可以先改用「貼上票券文字」`), 1200); } } catch (e) { /* 無痕模式 */ }
+const mark = (t) => { try { if (t) localStorage.setItem('neonlive-ocr-stage', t); else localStorage.removeItem('neonlive-ocr-stage'); } catch (e) { /* 無痕模式 */ } };   // App 若被系統關掉，下次開啟可以知道停在哪一步
+
+const cam = document.getElementById('cam'), camVid = document.getElementById('camVid'), camShot = document.getElementById('camShot'),
+  camFrame = document.getElementById('camFrame'), camStage = document.getElementById('camStage'), camTip = document.getElementById('camTip');
+let camStream = null, camSrc = 'live', box = null, S = { w: 0, h: 0 }, camView = null;
+const camMode = (m, tip) => { cam.dataset.mode = m; if (tip != null) camTip.textContent = tip; };
+const camStop = () => { if (camStream) camStream.getTracks().forEach((t) => t.stop()); camStream = null; camVid.srcObject = null; };
+function camClose() { camStop(); camShot.width = camShot.height = 0; cam.classList.remove('on'); }
+// 畫面用 object-fit: contain 顯示，算出內容實際在畫面上的位置，框的座標都存成原圖像素
+function camPlace() {
+  if (!S.w || !box) return;
+  const W = camStage.clientWidth, H = camStage.clientHeight, k = Math.min(W / S.w, H / S.h);
+  camView = { k, x: (W - S.w * k) / 2, y: (H - S.h * k) / 2 };
+  Object.assign(camFrame.style, { left: camView.x + box.x * k + 'px', top: camView.y + box.y * k + 'px', width: box.w * k + 'px', height: box.h * k + 'px' });
 }
-try { const st = localStorage.getItem('neonlive-ocr-stage'); if (st) { localStorage.removeItem('neonlive-ocr-stage'); setTimeout(() => P.toast(`上次掃描在「${st}」時被系統中斷，可能是手機記憶體不足（v23）。可以先改用「貼上票券文字」`), 1200); } } catch (e) { /* 無痕模式 */ }
+const guideBox = () => { const w = S.w * .9, h = Math.min(w * .5, S.h * .8); return { x: (S.w - w) / 2, y: (S.h - h) / 2, w, h }; };   // 票券大多是 2:1 的橫式
+async function camLive() {
+  camSrc = 'live'; camShot.width = camShot.height = 0; S = { w: 0, h: 0 };
+  camMode('live', '開啟相機中…');
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 3840 }, height: { ideal: 2160 } } });
+    if (!cam.classList.contains('on')) { camStop(); return; }
+    camVid.srcObject = camStream; await camVid.play().catch(() => {});
+    if (!camVid.videoWidth) await new Promise((r) => camVid.addEventListener('loadedmetadata', r, { once: true }));
+    S = { w: camVid.videoWidth, h: camVid.videoHeight }; box = guideBox(); camPlace();
+    camTip.textContent = '把票券放平、對準框內，字清楚了再按拍照';
+  } catch (e) {
+    console.warn(e); camStop(); camTip.textContent = '無法開啟相機（請在設定允許相機權限），可以按「相簿」選票券照片';
+  }
+}
+document.getElementById('tkScan').addEventListener('click', () => { cam.classList.add('on'); camLive(); });
+document.getElementById('camCancel').addEventListener('click', camClose);
+document.getElementById('camAlbum').addEventListener('click', () => tkFile.click());
+document.getElementById('camRetry').addEventListener('click', () => { if (camSrc === 'album') tkFile.click(); else camLive(); });
+document.getElementById('camShoot').addEventListener('click', () => {
+  if (!camStream || !S.w) return;
+  camShot.width = S.w; camShot.height = S.h; camShot.getContext('2d').drawImage(camVid, 0, 0, S.w, S.h);
+  camStop(); camPlace();
+  camMode('adjust', '拖曳四個角調整範圍，只框住票券');
+});
 tkFile.addEventListener('change', async () => {
   const f = tkFile.files[0]; tkFile.value = ''; if (!f) return;
+  camStop(); camSrc = 'album'; cam.classList.add('on');
+  camMode('busy', '讀取照片…');
+  try {
+    mark('讀取照片');
+    let bm;   // 解碼時就縮到寬 2400：4800 萬畫素的照片完整解開要約 190 MB，iPhone 會因此把 App 關掉
+    try { bm = await createImageBitmap(f, { resizeWidth: 2400, resizeQuality: 'high' }); } catch (e) { bm = await createImageBitmap(f); }
+    const k = Math.min(1, 3200 / Math.max(bm.width, bm.height));
+    S = { w: Math.round(bm.width * k), h: Math.round(bm.height * k) };
+    camShot.width = S.w; camShot.height = S.h; camShot.getContext('2d').drawImage(bm, 0, 0, S.w, S.h); bm.close();
+    box = guideBox(); camPlace();
+    camTip.textContent = ocrP ? '尋找票券範圍…' : '載入辨識模型…（第一次約 21 MB，之後不用再下載）';
+    mark('載入模型'); const ocr = await loadOcr();
+    mark('尋找票券範圍'); const r = await ocr.region(camShot).catch(() => null); mark('');
+    if (!cam.classList.contains('on')) return;
+    if (r && r.w > S.w * .1 && r.h > S.h * .05) box = r;
+    camPlace(); camMode('adjust', '已自動框出票券，拖曳四個角可以調整');
+  } catch (e) {
+    mark(''); camMode('adjust', '');
+    if (!S.w) { camClose(); P.toast('無法讀取這張照片：' + String(e && (e.message || e)).slice(0, 60)); return; }
+    camTip.textContent = '無法自動框選，請拖曳四個角框住票券';
+  }
+});
+// 拖曳框：四個角調大小，框內拖動整個框
+let drag = null;
+camFrame.addEventListener('pointerdown', (e) => {
+  if (cam.dataset.mode !== 'adjust' || !camView) return;
+  e.preventDefault(); camFrame.setPointerCapture(e.pointerId);
+  drag = { h: e.target.dataset.h || 'move', x: e.clientX, y: e.clientY, b: { ...box } };
+});
+camFrame.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const cl = (v, a, b) => Math.max(a, Math.min(b, v)), dx = (e.clientX - drag.x) / camView.k, dy = (e.clientY - drag.y) / camView.k, min = 60 / camView.k;
+  let { x, y, w, h } = drag.b;
+  if (drag.h === 'move') { x = cl(x + dx, 0, S.w - w); y = cl(y + dy, 0, S.h - h); } else {
+    let x2 = x + w, y2 = y + h;
+    if (drag.h[1] === 'w') x = cl(x + dx, 0, x2 - min); else x2 = cl(x2 + dx, x + min, S.w);
+    if (drag.h[0] === 'n') y = cl(y + dy, 0, y2 - min); else y2 = cl(y2 + dy, y + min, S.h);
+    w = x2 - x; h = y2 - y;
+  }
+  box = { x, y, w, h }; camPlace();
+});
+camFrame.addEventListener('pointerup', () => { drag = null; });
+camFrame.addEventListener('pointercancel', () => { drag = null; });
+window.addEventListener('resize', camPlace);
+document.getElementById('camGo').addEventListener('click', () => {
+  const k = Math.min(1, 2400 / Math.max(box.w, box.h)), c = document.createElement('canvas');
+  c.width = Math.round(box.w * k); c.height = Math.round(box.h * k);
+  c.getContext('2d').drawImage(camShot, box.x, box.y, box.w, box.h, 0, 0, c.width, c.height);
+  camClose(); tkScanImg(c);
+});
+const TK_SIDE = +(new URLSearchParams(location.search).get('side') || 1280);   // 網址加 ?side= 可以測試不同偵測尺寸
+async function tkScanImg(img) {
   const bar = document.getElementById('tkBar'), msg = document.getElementById('tkMsg');
   const prog = (p, t) => { bar.style.width = Math.round(p * 100) + '%'; msg.textContent = t; };
   tkText.value = ''; tkOpen(true);
   const first = !ocrP; let fake = 0;
   const tick = setInterval(() => { fake = Math.min(.9, fake + (first ? .012 : .05)); bar.style.width = Math.round(fake * 100) + '%'; }, 300);   // 模型下載沒有進度回報，用估計的進度條
-  let stage = '載入程式庫';
-  const mark = (t) => { stage = t; try { localStorage.setItem('neonlive-ocr-stage', t); } catch (e) { /* 無痕模式 */ } };   // App 若被系統關掉，下次開啟可以知道停在哪一步
+  let stage = '載入模型';
   try {
-    mark('載入模型'); prog(0, first ? '載入辨識模型…（第一次約 21 MB，之後不用再下載）' : '辨識中…');
+    mark(stage); prog(0, first ? '載入辨識模型…（第一次約 21 MB，之後不用再下載）' : '辨識中…');
     const ocr = await loadOcr();
-    mark('讀取照片'); const img = await tkPrep(f);
-    mark('辨識照片'); msg.textContent = '辨識中…';
-    const lines = await ocr.read(img); if (img.close) img.close(); else img.width = 0;   // 用完馬上釋放
+    mark(stage = '辨識照片'); msg.textContent = '辨識中…';
+    const lines = await ocr.read(img, TK_SIDE); img.width = 0;   // 用完馬上釋放
     tkText.value = tkClean(lines.join('\n')).trim();
     clearInterval(tick); prog(1, '辨識完成'); mark('');
     if (!tkRun(tkText.value)) { const h = document.getElementById('tkHint'); h.hidden = false; h.textContent = '辨識結果在下面，可以修改後再按「辨識並帶入」。'; }
@@ -1774,7 +1896,7 @@ tkFile.addEventListener('change', async () => {
     prog(0, `辨識失敗（${stage}）：${String(e && (e.message || e)).slice(0, 80)}`);
     const h = document.getElementById('tkHint'); h.hidden = false; h.textContent = '可以改用「貼上票券文字」。把上面這行錯誤訊息截圖給開發者，方便修正。';
   }
-});
+}
 // 安裝捷徑：直接開連結 Safari 會把簽署過的捷徑檔當文字顯示成亂碼，所以改用分享表單把檔案交給「捷徑」App
 // 檔案先預載好，點按鈕時才能立刻叫出分享表單（iOS 要求在點擊當下呼叫，等下載完再叫會被擋）
 let scFile = null;

@@ -4,7 +4,7 @@
 const ORT = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
 const M = new URL('./ocr/', import.meta.url).href;
 const DET_SIDE = 1280, DET_TH = 0.3,   // 960 或 v6 tiny 偵測模型會把行距窄的票上下兩行黏在一起
-      BOX_TH = 0.4, UNCLIP = 1.6, REC_H = 48, REC_MIN = 0.5;
+      BOX_TH = 0.4, UNCLIP = 1.6, REC_H = 48, REC_MIN = 0.35;
 let ort, det, rec, dict;
 
 export async function load() {
@@ -28,8 +28,8 @@ function toTensor(px, w, h, mean, std, W = w) {
 }
 
 // 偵測：機率圖 → 連通區塊 → 用主軸方向算出旋轉矩形（拍歪的票也能對齊）
-async function detect(src) {
-  const k = Math.min(1, DET_SIDE / Math.max(src.width, src.height));
+async function detect(src, side = DET_SIDE) {
+  const k = Math.min(1, side / Math.max(src.width, src.height));
   const W = Math.max(32, Math.round(src.width * k / 32) * 32), H = Math.max(32, Math.round(src.height * k / 32) * 32);
   const c = new OffscreenCanvas(W, H), g = c.getContext('2d'); g.drawImage(src, 0, 0, W, H);
   const t = toTensor(g.getImageData(0, 0, W, H).data, W, H, [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]);
@@ -87,13 +87,44 @@ async function recognize(src, b) {
 }
 
 // 回傳一行一個文字框，由上到下、同一行由左到右
-export async function read(src) {
+export async function read(src, side = DET_SIDE) {
   await load();
-  const boxes = (await detect(src)).sort((a, b) => a.y - b.y);
+  const boxes = (await detect(src, side)).sort((a, b) => a.y - b.y);
   for (let i = 1; i < boxes.length; i++) {   // 和 PaddleOCR 一樣：y 差很小視為同一行，改按 x 排
     for (let j = i; j > 0 && Math.abs(boxes[j].y - boxes[j - 1].y) < Math.min(boxes[j].h, boxes[j - 1].h) / 2 && boxes[j].x < boxes[j - 1].x; j--) [boxes[j], boxes[j - 1]] = [boxes[j - 1], boxes[j]];
   }
-  const lines = [];
-  for (const b of boxes) { const s = await recognize(src, b); if (s) lines.push(s); }
+  // 同一行、間隔小於兩個半字高的框接成一行（字距寬的票，「NMIXX 1ST WORLD TOUR」會被拆成好幾個框）
+  const lines = []; let last = null;
+  for (const b of boxes) {
+    const s = await recognize(src, b); if (!s) continue;
+    const flat = Math.abs(Math.sin(b.th)) < 0.2, w = flat ? b.w : b.h, h = flat ? b.h : b.w;
+    if (last && flat && last.flat && Math.abs(b.y - last.y) < Math.min(h, last.h) / 2 && b.x - w / 2 - last.r < 2.5 * Math.min(h, last.h)) lines[lines.length - 1] += ' ' + s;
+    else lines.push(s);
+    last = { flat, y: b.y, h, r: b.x + w / 2 };
+  }
   return lines;
+}
+
+// 找出照片裡票券的範圍：用較小的偵測尺寸找文字框，把彼此靠近的框連成一群，取總面積最大的那群（背景零星的字會被排除）
+export async function region(src) {
+  await load();
+  const bs = await detect(src, 960);
+  if (!bs.length) return null;
+  const r = bs.map((b) => {
+    const c = Math.abs(Math.cos(b.th)), s = Math.abs(Math.sin(b.th)), ex = (b.w * c + b.h * s) / 2, ey = (b.w * s + b.h * c) / 2;
+    return { x0: b.x - ex, y0: b.y - ey, x1: b.x + ex, y1: b.y + ey, t: Math.min(b.w, b.h), a: b.w * b.h };
+  });
+  const up = r.map((_, i) => i), root = (i) => (up[i] === i ? i : (up[i] = root(up[i])));
+  for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) {
+    const g = 2.5 * Math.min(r[i].t, r[j].t);   // 間隔小於約兩行半就算同一張票
+    if (r[i].x0 - g < r[j].x1 && r[j].x0 - g < r[i].x1 && r[i].y0 - g < r[j].y1 && r[j].y0 - g < r[i].y1) up[root(i)] = root(j);
+  }
+  const area = {};
+  r.forEach((b, i) => { const k = root(i); area[k] = (area[k] || 0) + b.a; });
+  const best = +Object.keys(area).sort((a, b) => area[b] - area[a])[0];
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  r.forEach((b, i) => { if (root(i) === best) { x0 = Math.min(x0, b.x0); y0 = Math.min(y0, b.y0); x1 = Math.max(x1, b.x1); y1 = Math.max(y1, b.y1); } });
+  const m = 0.04 * Math.max(x1 - x0, y1 - y0);
+  x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(src.width, x1 + m); y1 = Math.min(src.height, y1 + m);
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
