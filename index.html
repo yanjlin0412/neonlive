@@ -494,8 +494,7 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
       <p class="lbl" style="margin:0 0 12px;line-height:1.6">用 iPhone 內建的文字辨識讀票券照片，在「照片」按分享就能一鍵拷貝票券文字。辨識在手機上完成，不會上傳。</p>
       <button type="button" class="cbtn" id="scInstall" style="width:100%">一鍵安裝「NEON匯入票券」捷徑</button>
       <div class="lbl" style="margin:14px 0 6px;color:#eef1f6;font-weight:600">安裝</div>
-      <ol class="scsteps"><li>點上面的按鈕，會跳出分享選單</li><li>在 App 那一排找「捷徑」點下去（沒看到就往右滑，或點「更多」）</li><li>「捷徑」App 打開後，點「加入捷徑」就完成了</li></ol>
-      <p class="lbl" style="margin:8px 0 0;line-height:1.6">分享選單裡沒有「捷徑」：改選「儲存到檔案」，再到「檔案」App 點「NEON匯入票券」打開。</p>
+      <ol class="scsteps"><li>點上面的按鈕，會跳出分享選單</li><li>App 那一排有「捷徑」就點它；沒有的話往下選「儲存到檔案」，存到「我的 iPhone」</li><li>打開「檔案」App，點剛存的「NEON匯入票券」</li><li>「捷徑」App 會打開，點「加入捷徑」就完成了</li></ol>
       <div class="lbl" style="margin:14px 0 6px;color:#eef1f6;font-weight:600">使用</div>
       <ol class="scsteps"><li>在「照片」打開票券照片，點左下角「分享」</li><li>往下滑，點「NEON匯入票券」（第一次會問能不能存取，選「允許」）</li><li>看到「票券文字已拷貝」通知後，打開 NEON//LIVE → 下方「＋」</li><li>點「貼上票券文字」→ iOS 跳出「貼上」時點一下，欄位就會自動帶入</li></ol>
       <p class="lbl" style="margin:10px 0 0;line-height:1.6">分享選單找不到捷徑：滑到最下面點「編輯動作」，把「NEON匯入票券」加到常用。也可以直接在「捷徑」App 點它，再選一張照片。</p></div>
@@ -1710,7 +1709,7 @@ document.getElementById('tkScan').addEventListener('click', () => { tkText.value
 // 安裝捷徑：直接開連結 Safari 會把簽署過的捷徑檔當文字顯示成亂碼，所以改用分享表單把檔案交給「捷徑」App
 // 檔案先預載好，點按鈕時才能立刻叫出分享表單（iOS 要求在點擊當下呼叫，等下載完再叫會被擋）
 let scFile = null;
-const scLoad = () => fetch('neon-import.shortcut').then((r) => r.blob()).then((b) => { scFile = new File([b], 'NEON匯入票券.shortcut', { type: 'application/octet-stream' }); }).catch(() => {});
+const scLoad = () => fetch('neon-import.shortcut').then((r) => r.blob()).then((b) => { scFile = new File([b], 'NEON匯入票券.shortcut'); }).catch(() => {});   // 不指定類型，讓 iOS 依 .shortcut 副檔名認出是捷徑檔
 setTimeout(scLoad, 3000);
 document.getElementById('scInstall').addEventListener('click', async () => {
   if (!scFile) { await scLoad(); if (!scFile) { P.toast('無法下載捷徑檔，請確認網路後再試一次'); return; } }
