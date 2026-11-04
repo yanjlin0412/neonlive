@@ -1280,12 +1280,13 @@ function renderStats() {
 
 /* ================= 照片：壓縮後存進資料庫 ================= */
 async function compress(file) {
-  let src = await createImageBitmap(file).catch(() => null);
+  // 解碼時就先縮小：iPhone 4800 萬畫素照片完整解開約 190 MB，容易讓 App 被系統關掉
+  let src = await createImageBitmap(file, { resizeWidth: 1600, resizeQuality: 'high' }).catch(() => null) || await createImageBitmap(file).catch(() => null);
   if (!src) src = await new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = URL.createObjectURL(file); });
   if (!src) return null;
   const k = Math.min(1, 1600 / Math.max(src.width, src.height));
   const c = document.createElement('canvas'); c.width = Math.round(src.width * k); c.height = Math.round(src.height * k);
-  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height); if (src.close) src.close();
   return new Promise((res) => c.toBlob(res, 'image/jpeg', 0.82));
 }
 async function addPhoto(s, file, kind, asCover) {
