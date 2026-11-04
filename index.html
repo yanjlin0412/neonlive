@@ -443,6 +443,16 @@ nav.pill .add{width:56px;height:56px;border-radius:28px;color:#0a0a0a;background
 .lightbox{position:absolute;inset:0;z-index:70;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center}
 .lightbox.on{display:flex}
 .lightbox img{max-width:100%;max-height:100%}
+/* ============ 省記憶體 ============
+   iPhone 網頁 App 的圖層記憶體很有限：毛玻璃（backdrop-filter）、大範圍模糊濾鏡加上無限動畫，
+   每一格都要重新算圖層，超過上限頁面就會被系統關掉（出現「重複發生問題」） */
+*,*::before,*::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.bg *,.bg *::before,.bg *::after{animation:none!important;filter:none!important}
+.bg.aurora i{width:520px!important;height:520px!important;opacity:.5!important}
+.bg.aurora i:nth-child(1){background:radial-gradient(closest-side,var(--c),transparent)!important;left:-200px!important;top:-4%!important}
+.bg.aurora i:nth-child(2){background:radial-gradient(closest-side,var(--m),transparent)!important;right:-220px!important;top:30%!important}
+.bg.aurora i:nth-child(3){background:radial-gradient(closest-side,var(--v),transparent)!important;left:0!important;bottom:-240px!important}
+.holo,.cdn.live{animation:none!important}
 </style>
 </head>
 <body>
@@ -779,6 +789,7 @@ const BGS = [
   { id: 'stick', name: '螢光人海', html: '<canvas></canvas>', prev: 'repeating-linear-gradient(80deg,transparent 0 14px,var(--c) 14px 16px,transparent 16px 30px,var(--m) 30px 32px,transparent 32px 44px),linear-gradient(transparent 50%,#0a0412 50%),#0a0412' }
 ];
 const motionOK = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+const bgMotion = false;   // 背景一律靜態：持續重畫會吃圖層記憶體和電量
 let bgId = (() => { try { return localStorage.getItem('neon-bg') || 'aurora'; } catch { return 'aurora'; } })();
 let waveRAF;
 function stars(n, spread) { let s = []; for (let i = 0; i < n; i++) s.push(`${Math.random() * 430 | 0}px ${Math.random() * spread | 0}px rgba(255,255,255,${(0.4 + Math.random() * 0.6).toFixed(2)})`); return s.join(','); }
@@ -816,7 +827,7 @@ function wave(cv) {
       ctx.strokeStyle = `rgba(${L.c},.85)`; ctx.lineWidth = 2; ctx.shadowColor = `rgba(${L.c},1)`; ctx.shadowBlur = 16; ctx.stroke();
     }
     ctx.shadowBlur = 0;
-    if (motionOK && bgId === 'wave') waveRAF = requestAnimationFrame(draw);
+    if (bgMotion && bgId === 'wave') waveRAF = requestAnimationFrame(draw);
   };
   draw(0);
 }
@@ -839,7 +850,7 @@ function sticks(cv) {
       ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
       ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.ellipse(bx, by + f.len * .55, f.len * .32, f.len * .42, 0, 0, Math.PI * 2); ctx.fill();   // 觀眾剪影
     }
-    if (motionOK && bgId === 'stick') waveRAF = requestAnimationFrame(draw);
+    if (bgMotion && bgId === 'stick') waveRAF = requestAnimationFrame(draw);
   };
   draw(0);
 }
