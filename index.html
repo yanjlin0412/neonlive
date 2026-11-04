@@ -873,8 +873,16 @@ const ART = {
 const cover = (s) => { const p = coverPhoto(s); return p && P.url(p.id) ? `url('${P.url(p.id)}') center/cover no-repeat` : ART[s.hue] || ART.c; };
 const setCover = (s, pid) => s.photos.forEach((x) => { x.cover = x.id === pid; });
 const coverIn = document.getElementById('coverIn'), coverPv = document.getElementById('coverPv');
-coverIn.addEventListener('change', () => { const f = coverIn.files[0]; coverPv.style.backgroundImage = f ? `url('${URL.createObjectURL(f)}')` : ''; coverPv.textContent = f ? '' : '＋'; });
-form.addEventListener('reset', () => { coverPv.style.backgroundImage = ''; coverPv.textContent = '＋'; });
+// 選好就先壓縮，預覽也用壓縮後的小圖：直接拿原檔當背景，iPhone 會把 4800 萬畫素整張解開，App 會被系統關掉、回到首頁
+let coverBlob = null;
+coverIn.addEventListener('change', async () => {
+  const f = coverIn.files[0]; coverIn.value = ''; if (!f) return;
+  coverPv.textContent = '…';
+  const b = await compress(f);
+  if (!b) { coverPv.textContent = coverBlob ? '' : '＋'; P.toast('這張照片無法讀取'); return; }
+  coverBlob = b; coverPv.style.backgroundImage = `url('${URL.createObjectURL(b)}')`; coverPv.textContent = '';
+});
+form.addEventListener('reset', () => { coverBlob = null; coverPv.style.backgroundImage = ''; coverPv.textContent = '＋'; });
 
 /* ================= 搶票狀態 ================= */
 const FLOW = ['wish', 'presale', 'going', 'attended'];
@@ -1339,7 +1347,7 @@ ed.addEventListener('submit', async (e) => {
       with: o.with.trim(), notes: o.notes.trim(), sale: o.sale, setlist, encore,
       status: o.status || (o.date > P.today ? 'going' : 'attended')
     });
-    if (o.cover instanceof File && o.cover.size) await addPhoto(s, o.cover, 'live', true);
+    if (coverBlob) { const id = await P.putPhoto(coverBlob); s.photos.push({ id, kind: 'live', cover: false }); setCover(s, id); coverBlob = null; }
     else if (isNew && copyFrom && coverPhoto(copyFrom)) {   // 複製演唱會：沿用原本的封面照片（另存一份）
       const b = await P.photoBlob(coverPhoto(copyFrom).id); if (b) { const nid = await P.putPhoto(b); s.photos.push({ id: nid, kind: 'live', cover: true }); }
     }
