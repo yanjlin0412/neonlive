@@ -1,13 +1,13 @@
 // 離線快取：App 外殼採 cache-first，字型採 stale-while-revalidate
-const VERSION = 'neonlive-v29';   // 改版時 index.html 與這裡的 ?v= 一起改
+const VERSION = 'neonlive-v30';   // 改版時 index.html 與這裡的 ?v= 一起改
 const SHELL = [
   './',
   './index.html',
-  './app.css?v=29',
-  './js/core.js?v=29',
-  './js/app.js?v=29',
-  './js/cards.js?v=29',
-  './js/recap.js?v=29',
+  './app.css?v=30',
+  './js/core.js?v=30',
+  './js/app.js?v=30',
+  './js/cards.js?v=30',
+  './js/recap.js?v=30',
   './manifest.webmanifest',
   './icons/apple-touch-icon.png',
   './icons/icon-192.png',

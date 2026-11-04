@@ -216,7 +216,7 @@ function render() {
       <span class="art" style="background:${cover(s)}"><span class="st ${ST[s.status]}">${P.STATUS_EN[s.status]}</span>${s.price ? `<span class="px">${money(twd(s))}</span>` : ''}<span class="day">${p.d}<small>${p.y}年${p.mon} 週${p.wk}</small></span></span>
       <span class="tear"></span>
       <span class="mt"><span class="ar">${esc(s.artist)}</span><span style="font-size:13px;color:var(--mut)">${esc(s.tour)}</span><span class="mono" style="font-size:12px;color:#c7d2e6;margin-top:4px">◉ ${esc(s.venue)}${s.seat ? ' · ' + esc(s.seat) : ''}</span></span>
-      <span class="ft"><span class="mono y" style="font-size:13px;letter-spacing:1px">${s.rating ? P.stars(s.rating) : s.status === 'presale' ? '等開賣' : 'T−' + +P.countdown(s).d + ' DAYS'}</span><span class="bc"></span></span>
+      <span class="ft"><span class="mono y" style="font-size:13px;letter-spacing:1px">${s.rating ? P.stars(s.rating) : s.status === 'presale' ? '等開賣' : s.status === 'attended' ? '尚未評分' : 'T−' + +P.countdown(s).d + ' DAYS'}</span><span class="bc"></span></span>
       <span class="holo"></span></span></button>`; }).join('');
   const track = document.getElementById('track');
   const now = (i => track.children[i < 0 ? tl.length - 1 : i])(tl.findIndex((s) => s.date >= P.today));   // 一打開就停在最近的一場

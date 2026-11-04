@@ -131,7 +131,7 @@ input,textarea,select{font:inherit;font-size:16px;color:inherit}
 .money b{font:600 14px "JetBrains Mono",monospace;color:var(--y)}
 .track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding:18px calc(50% - 140px) 14px;scrollbar-width:none}
 .track::-webkit-scrollbar{display:none}
-.tk{flex:0 0 280px;height:430px;margin:0 6px;scroll-snap-align:center;border-radius:30px;padding:3px;background:var(--chrome);box-shadow:0 14px 30px rgba(0,0,0,.5);text-align:left}
+.tk{flex:0 0 280px;min-width:0;max-width:280px;height:430px;margin:0 6px;scroll-snap-align:center;border-radius:30px;padding:3px;background:var(--chrome);box-shadow:0 14px 30px rgba(0,0,0,.5);text-align:left}
 .tk .in{position:relative;display:flex;flex-direction:column;height:100%;border-radius:27px;overflow:hidden;background:linear-gradient(170deg,var(--card1),var(--card2) 70%)}
 .tk .art{position:relative;display:block;height:244px}
 .tk .art::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(105deg,transparent 0 16px,rgba(200,230,255,.1) 16px 17px),linear-gradient(to top,rgba(9,11,20,.95),transparent 55%)}
@@ -140,7 +140,8 @@ input,textarea,select{font:inherit;font-size:16px;color:inherit}
 .tk .day{position:absolute;left:16px;bottom:12px;z-index:1;font:800 48px/1 Unbounded,sans-serif;text-shadow:0 0 18px rgba(var(--c-rgb),.5)}
 .tk .day small{font:600 14px "JetBrains Mono","PingFang TC",monospace;margin-left:8px;color:#c7d2e6;letter-spacing:.06em;text-shadow:none}
 .tk .tear{display:block;border-top:2px dashed rgba(255,255,255,.22);margin:0 18px}
-.tk .mt{padding:14px 18px 0;display:flex;flex-direction:column;gap:4px}
+.tk .mt{padding:14px 18px 0;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tk .mt>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tk .ar{font:800 20px Unbounded,-apple-system,"PingFang TC",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tk .ft{margin-top:auto;padding:0 18px 18px;display:flex;justify-content:space-between;align-items:flex-end}
 .bc{width:96px;height:26px;opacity:.8;background:repeating-linear-gradient(90deg,#c7d2e6 0 2px,transparent 2px 4px,#c7d2e6 4px 5px,transparent 5px 8px,#c7d2e6 8px 11px,transparent 11px 13px)}
