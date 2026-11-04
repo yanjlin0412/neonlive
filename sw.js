@@ -1,8 +1,13 @@
 // 離線快取：App 外殼採 cache-first，字型採 stale-while-revalidate
-const VERSION = 'neonlive-v28';
+const VERSION = 'neonlive-v29';   // 改版時 index.html 與這裡的 ?v= 一起改
 const SHELL = [
   './',
   './index.html',
+  './app.css?v=29',
+  './js/core.js?v=29',
+  './js/app.js?v=29',
+  './js/cards.js?v=29',
+  './js/recap.js?v=29',
   './manifest.webmanifest',
   './icons/apple-touch-icon.png',
   './icons/icon-192.png',
@@ -10,7 +15,7 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' }))))   // 不吃 HTTP 快取，確保拿到這一版的檔案.then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
